@@ -5,544 +5,500 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Ice Hopper - GlacierPlay</title>
   <style>
-    * {
-      box-sizing: border-box;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: none;
-      margin: 0;
-      padding: 0;
-    }
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #0c1427;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    #gameCanvas {
-      width: 100vw;
-      height: 100vh;
-      display: block;
-      background-color: #0284c7;
-    }
-    /* Floating Glassmorphic Mobile HUD */
-    .hud {
-      position: absolute;
-      top: env(safe-area-inset-top, 16px);
-      left: 16px;
-      right: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 18px;
-      background: rgba(12, 20, 39, 0.65);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 20px;
-      color: #f8fafc;
-      font-weight: 800;
-      font-size: 15px;
-      letter-spacing: 0.5px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-      pointer-events: none;
-      z-index: 10;
-    }
-    .hud #highScoreDisplay {
-      color: #f59e0b;
-    }
-    .instructions-overlay {
-      position: absolute;
-      bottom: env(safe-area-inset-bottom, 24px);
-      width: 100%;
-      text-align: center;
-      color: rgba(248, 250, 252, 0.6);
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      pointer-events: none;
-      z-index: 10;
-    }
+    * { box-sizing: border-box; user-select: none; -webkit-user-select: none; touch-action: none; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background-color: #0c1427; font-family: system-ui, -apple-system, sans-serif; }
+    #gameCanvas { width: 100vw; height: 100vh; display: block; }
+    
+    /* UI Overlays */
+    .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 20; background: rgba(12, 20, 39, 0.85); backdrop-filter: blur(8px); transition: opacity 0.3s; }
+    .hidden { opacity: 0; pointer-events: none; }
+    
+    h1 { font-size: 42px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; background: linear-gradient(135deg, #e0f2fe, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; filter: drop-shadow(0 4px 10px rgba(56, 189, 248, 0.4)); }
+    .stats { color: #f8fafc; font-size: 18px; font-weight: 700; margin-bottom: 30px; text-align: center; line-height: 1.5; }
+    .stats span { color: #f59e0b; }
+    .stats .fish { color: #38bdf8; }
+    
+    button { background: linear-gradient(to bottom, #38bdf8, #0284c7); border: none; border-radius: 30px; padding: 15px 40px; color: white; font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 8px 20px rgba(2, 132, 199, 0.5); cursor: pointer; transition: transform 0.1s; margin-bottom: 15px; width: 220px; }
+    button:active { transform: scale(0.95); }
+    button.alt { background: linear-gradient(to bottom, #475569, #1e293b); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5); }
+    
+    /* In-Game HUD */
+    .hud { position: absolute; top: env(safe-area-inset-top, 16px); left: 16px; right: 16px; display: flex; justify-content: space-between; padding: 10px 18px; background: rgba(12, 20, 39, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; color: white; font-weight: 800; z-index: 10; pointer-events: none; }
+    .hud-left { display: flex; gap: 15px; }
+    .hud-fish { color: #38bdf8; }
+    .powerup-bar { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); width: 200px; height: 10px; background: rgba(0,0,0,0.5); border-radius: 5px; overflow: hidden; display: none; z-index: 10; }
+    .powerup-fill { height: 100%; background: #f59e0b; width: 100%; transition: width 0.1s linear; }
+
+    /* Shop UI */
+    #shop { display: none; flex-direction: column; align-items: center; justify-content: center; background: #0f172a; }
+    .skin-card { background: #1e293b; padding: 15px; border-radius: 12px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; width: 280px; border: 2px solid transparent; }
+    .skin-card.active { border-color: #38bdf8; }
+    .skin-info { color: white; font-weight: bold; }
+    .skin-cost { color: #38bdf8; font-size: 14px; }
+    .skin-btn { width: auto; padding: 10px 20px; font-size: 14px; margin: 0; }
   </style>
 </head>
 <body>
 
-  <div class="hud">
-    <div id="scoreDisplay">SCORE: 0</div>
-    <div id="highScoreDisplay">BEST: 0</div>
+  <!-- Main Menu -->
+  <div id="startMenu" class="overlay">
+    <h1>Ice Hopper</h1>
+    <div class="stats">
+      BEST SCORE: <span id="menuBest">0</span><br>
+      FISH VAULT: <span class="fish" id="menuFish">0</span> 🐟
+    </div>
+    <button onclick="startGame()">Tap to Hop</button>
+    <button class="alt" onclick="openShop()">Skins Shop</button>
   </div>
 
+  <!-- Shop Menu -->
+  <div id="shop" class="overlay">
+    <h1 style="font-size: 28px;">Skin Shop</h1>
+    <div class="stats">FISH: <span class="fish" id="shopFish">0</span> 🐟</div>
+    <div id="skinList"></div>
+    <button class="alt" onclick="closeShop()" style="margin-top: 20px;">Back</button>
+  </div>
+
+  <!-- In-Game HUD -->
+  <div class="hud" id="gameHud" style="opacity: 0;">
+    <div class="hud-left">
+      <div id="scoreDisplay">0</div>
+      <div class="hud-fish" id="fishDisplay">🐟 0</div>
+    </div>
+    <div id="statusDisplay"></div>
+  </div>
+  <div class="powerup-bar" id="powerupBar"><div class="powerup-fill" id="powerupFill"></div></div>
+
   <canvas id="gameCanvas"></canvas>
-  <div class="instructions-overlay">Swipe to Hop</div>
 
 <script>
-// --- HIGH SCORE & GLACIERPLAY BRIDGE ---
-const STORAGE_KEY = 'glacierplay_ice_hopper_highscore';
-let highScore = parseInt(localStorage.getItem(STORAGE_KEY)) || 0;
-let isNewHighScore = false;
+// --- LOCAL STORAGE & PROGRESSION ---
+const KEY_HIGH = 'glacierplay_icehopper_high';
+const KEY_FISH = 'glacierplay_icehopper_fish';
+const KEY_SKINS = 'glacierplay_icehopper_skins';
+const KEY_EQUIP = 'glacierplay_icehopper_equip';
 
-function checkAndUpdateHighScore(currentScore) {
-  if (currentScore > highScore) {
-    highScore = currentScore;
-    isNewHighScore = true;
-    localStorage.setItem(STORAGE_KEY, highScore);
+let highScore = parseInt(localStorage.getItem(KEY_HIGH)) || 0;
+let fishCoins = parseInt(localStorage.getItem(KEY_FISH)) || 0;
+let unlockedSkins = JSON.parse(localStorage.getItem(KEY_SKINS)) || ['default'];
+let currentSkin = localStorage.getItem(KEY_EQUIP) || 'default';
 
-    if (window.GlacierPlay && typeof window.GlacierPlay.onScoreUpdate === 'function') {
-      window.GlacierPlay.onScoreUpdate(currentScore, highScore);
-    } else if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'GLACIERPLAY_SCORE', game: 'ice_hopper', score: currentScore, highScore: highScore }, '*');
-    }
-  }
+const SKINS = [
+  { id: 'default', name: 'Classic', cost: 0, color: '#0f172a', beak: '#f97316' },
+  { id: 'puffin', name: 'Puffin', cost: 50, color: '#1e293b', beak: '#ef4444' },
+  { id: 'cool', name: 'Cool Guy', cost: 150, color: '#0f172a', beak: '#f97316', glasses: true }
+];
+
+function saveProgress() {
+  localStorage.setItem(KEY_HIGH, highScore);
+  localStorage.setItem(KEY_FISH, fishCoins);
+  localStorage.setItem(KEY_SKINS, JSON.stringify(unlockedSkins));
+  localStorage.setItem(KEY_EQUIP, currentSkin);
+  document.getElementById('menuBest').innerText = highScore;
+  document.getElementById('menuFish').innerText = fishCoins;
 }
+saveProgress();
 
-// --- WEB AUDIO SYNTHESIZER ---
+// --- AUDIO & HAPTICS ---
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 
-function initAudio() {
-  if (!audioCtx) audioCtx = new AudioCtx();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-}
+function initAudio() { if (!audioCtx) audioCtx = new AudioCtx(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
+function vibrate(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
 
-function playHopSound() {
+function playSound(type) {
   initAudio();
+  const t = audioCtx.currentTime;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(480, audioCtx.currentTime + 0.08);
-  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-  gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
   osc.connect(gain); gain.connect(audioCtx.destination);
-  osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+
+  if (type === 'hop') {
+    osc.type = 'sine'; osc.frequency.setValueAtTime(300, t); osc.frequency.exponentialRampToValueAtTime(600, t + 0.1);
+    gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0.01, t + 0.1);
+    osc.start(t); osc.stop(t + 0.1); vibrate(10);
+  } else if (type === 'coin') {
+    osc.type = 'square'; osc.frequency.setValueAtTime(800, t); osc.frequency.setValueAtTime(1200, t + 0.05);
+    gain.gain.setValueAtTime(0.05, t); gain.gain.linearRampToValueAtTime(0.01, t + 0.15);
+    osc.start(t); osc.stop(t + 0.15); vibrate([10, 30, 10]);
+  } else if (type === 'powerup') {
+    osc.type = 'triangle'; osc.frequency.setValueAtTime(400, t); osc.frequency.linearRampToValueAtTime(800, t + 0.3);
+    gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0.01, t + 0.3);
+    osc.start(t); osc.stop(t + 0.3); vibrate(50);
+  } else if (type === 'crash' || type === 'splash') {
+    osc.type = type === 'crash' ? 'sawtooth' : 'sine';
+    osc.frequency.setValueAtTime(150, t); osc.frequency.exponentialRampToValueAtTime(40, t + 0.3);
+    gain.gain.setValueAtTime(0.2, t); gain.gain.linearRampToValueAtTime(0.01, t + 0.3);
+    osc.start(t); osc.stop(t + 0.3); vibrate(80);
+  }
 }
 
-function playSplashSound() {
-  initAudio();
-  const bufferSize = audioCtx.sampleRate * 0.25;
-  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-
-  const noise = audioCtx.createBufferSource();
-  noise.buffer = buffer;
-  const filter = audioCtx.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.setValueAtTime(800, audioCtx.currentTime);
-  filter.frequency.exponentialRampToValueAtTime(90, audioCtx.currentTime + 0.25);
-
-  const gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-  gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-
-  noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
-  noise.start();
-}
-
-function playCrashSound() {
-  initAudio();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(160, audioCtx.currentTime);
-  osc.frequency.linearRampToValueAtTime(40, audioCtx.currentTime + 0.25);
-  gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-  gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-  osc.connect(gain); gain.connect(audioCtx.destination);
-  osc.start(); osc.stop(audioCtx.currentTime + 0.25);
-}
-
-// --- HIGH-DETAIL SVG ASSETS (EMBEDDED DATA URIs) ---
-const svgToImg = (svg) => {
-  const img = new Image();
-  img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
-  return img;
-};
-
-// 1. Detailed Ice Floe SVG
-const iceFloeImg = svgToImg(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
-  <defs>
-    <linearGradient id="iceGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="35%" stop-color="#e0f2fe"/>
-      <stop offset="100%" stop-color="#bae6fd"/>
-    </linearGradient>
-  </defs>
-  <!-- Underwater Ice Shelf -->
-  <path d="M8,25 C25,12 175,12 192,25 C200,45 195,78 180,88 C150,98 50,98 20,88 C5,78 0,45 8,25 Z" fill="#38bdf8" opacity="0.45"/>
-  <!-- Top Surface -->
-  <path d="M14,18 C32,8 168,8 186,18 C194,36 188,68 174,78 C144,88 56,88 26,78 C12,68 6,36 14,18 Z" fill="url(#iceGrad)"/>
-  <!-- Snow Cap Drift -->
-  <path d="M28,20 C50,14 100,16 125,22 C90,28 45,26 28,20 Z" fill="#ffffff" opacity="0.95"/>
-  <!-- Surface Cracks -->
-  <path d="M65,35 L85,50 L80,65 M85,50 L105,45" stroke="#0284c7" stroke-width="2.5" fill="none" opacity="0.5" stroke-linecap="round"/>
-  <path d="M130,22 L145,38 L160,32" stroke="#0284c7" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
-</svg>`);
-
-// 2. Detailed Cargo Ship SVG
-const shipImg = svgToImg(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100">
-  <!-- Bow/Stern Water Spray -->
-  <ellipse cx="285" cy="72" rx="14" ry="6" fill="#ffffff" opacity="0.4"/>
-  <ellipse cx="15" cy="72" rx="10" ry="5" fill="#ffffff" opacity="0.3"/>
-  <!-- Lower Steel Hull -->
-  <path d="M8,48 L282,48 L295,68 C290,82 270,86 250,86 L40,86 C20,86 8,76 8,48 Z" fill="#7f1d1d"/>
-  <!-- Upper Hull Stripe -->
-  <path d="M4,38 L286,38 L291,50 L8,50 Z" fill="#dc2626"/>
-  <line x1="4" y1="44" x2="288" y2="44" stroke="#b91c1c" stroke-width="1.5"/>
-  <!-- Stacked Cargo Containers -->
-  <rect x="22" y="16" width="46" height="22" rx="2" fill="#0284c7" stroke="#0369a1" stroke-width="1.5"/>
-  <line x1="33" y1="16" x2="33" y2="38" stroke="#0369a1"/>
-  <line x1="45" y1="16" x2="45" y2="38" stroke="#0369a1"/>
-  <line x1="57" y1="16" x2="57" y2="38" stroke="#0369a1"/>
-
-  <rect x="74" y="16" width="46" height="22" rx="2" fill="#eab308" stroke="#ca8a04" stroke-width="1.5"/>
-  <line x1="85" y1="16" x2="85" y2="38" stroke="#ca8a04"/>
-  <line x1="97" y1="16" x2="97" y2="38" stroke="#ca8a04"/>
-  <line x1="109" y1="16" x2="109" y2="38" stroke="#ca8a04"/>
-
-  <rect x="126" y="16" width="46" height="22" rx="2" fill="#059669" stroke="#047857" stroke-width="1.5"/>
-  <line x1="137" y1="16" x2="137" y2="38" stroke="#047857"/>
-  <line x1="149" y1="16" x2="149" y2="38" stroke="#047857"/>
-  <line x1="161" y1="16" x2="161" y2="38" stroke="#047857"/>
-
-  <!-- Upper Tier Containers -->
-  <rect x="48" y="-4" width="46" height="20" rx="2" fill="#d97706" stroke="#b45309" stroke-width="1.5"/>
-  <rect x="100" y="-4" width="46" height="20" rx="2" fill="#0284c7" stroke="#0369a1" stroke-width="1.5"/>
-
-  <!-- Bridge / Navigation Cabin -->
-  <rect x="212" y="8" width="36" height="30" rx="3" fill="#f8fafc"/>
-  <rect x="216" y="13" width="28" height="9" rx="1.5" fill="#38bdf8"/>
-  <rect x="225" y="-4" width="10" height="12" fill="#0f172a"/>
-  <rect x="223" y="-7" width="14" height="3" fill="#dc2626"/>
-  <!-- Exhaust Steam -->
-  <circle cx="221" cy="-14" r="4" fill="#f8fafc" opacity="0.6"/>
-  <circle cx="215" cy="-20" r="6" fill="#f8fafc" opacity="0.3"/>
-</svg>`);
-
-// 3. Detailed Penguin SVG
-const penguinImg = svgToImg(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <ellipse cx="50" cy="88" rx="32" ry="10" fill="#000000" opacity="0.3"/>
-  <ellipse cx="32" cy="82" rx="10" ry="6" fill="#f97316"/>
-  <ellipse cx="68" cy="82" rx="10" ry="6" fill="#f97316"/>
-  <path d="M50,10 C25,10 18,35 18,60 C18,80 32,85 50,85 C68,85 82,80 82,60 C82,35 75,10 50,10 Z" fill="#0f172a"/>
-  <ellipse cx="16" cy="52" rx="7" ry="18" transform="rotate(15, 16, 52)" fill="#0f172a"/>
-  <ellipse cx="84" cy="52" rx="7" ry="18" transform="rotate(-15, 84, 52)" fill="#0f172a"/>
-  <path d="M50,28 C35,28 30,48 30,62 C30,78 38,81 50,81 C62,81 70,78 70,62 C70,48 65,28 50,28 Z" fill="#ffffff"/>
-  <ellipse cx="36" cy="40" rx="4" ry="2.5" fill="#f43f5e" opacity="0.3"/>
-  <ellipse cx="64" cy="40" rx="4" ry="2.5" fill="#f43f5e" opacity="0.3"/>
-  <circle cx="38" cy="34" r="5" fill="#0f172a"/>
-  <circle cx="62" cy="34" r="5" fill="#0f172a"/>
-  <circle cx="36" cy="32" r="2" fill="#ffffff"/>
-  <circle cx="60" cy="32" r="2" fill="#ffffff"/>
-  <path d="M43,40 Q50,38 57,40 Q50,52 43,40 Z" fill="#fb923c"/>
-</svg>`);
-
-// --- FULL-SCREEN CANVAS & ENGINE SETUP ---
+// --- ENGINE & CANVAS SETUP ---
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+let GRID_SIZE = 50, COLS = 10;
 
-let GRID_SIZE = 50;
-const COLS = 10;
-
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  GRID_SIZE = canvas.width / COLS; // Responsive 10-column grid scaling
+function resize() {
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  GRID_SIZE = canvas.width / COLS;
 }
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+window.addEventListener('resize', resize); resize();
 
-let score = 0;
-let maxRow = 0;
-let gameOver = false;
-let cameraY = 0;
-let autoScrollSpeed = 0.25;
+let gameState = 'START'; // START, PLAY, OVER
+let score = 0, maxRow = 0, cameraY = 0, autoScrollSpeed = 0;
+let particles = [];
+let powerupTimer = 0;
+let hasShield = false;
 
-const player = {
-  col: 4,
-  row: 2,
-  worldX: 4 * GRID_SIZE,
-  worldY: 2 * GRID_SIZE,
+// --- VISUAL ASSETS (SVG Data URIs) ---
+const svgToImg = (svg) => { const img = new Image(); img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg); return img; };
+const iceImg = svgToImg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100"><path d="M14,18 C32,8 168,8 186,18 C194,36 188,68 174,78 C144,88 56,88 26,78 C12,68 6,36 14,18 Z" fill="#e0f2fe"/><path d="M28,20 C50,14 100,16 125,22 C90,28 45,26 28,20 Z" fill="#ffffff" opacity="0.8"/></svg>`);
+const shipImg = svgToImg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100"><path d="M8,48 L282,48 L295,68 C290,82 270,86 250,86 L40,86 C20,86 8,76 8,48 Z" fill="#7f1d1d"/><path d="M4,38 L286,38 L291,50 L8,50 Z" fill="#dc2626"/><rect x="22" y="16" width="46" height="22" fill="#0284c7"/><rect x="74" y="16" width="46" height="22" fill="#eab308"/><rect x="126" y="16" width="46" height="22" fill="#059669"/><rect x="212" y="8" width="36" height="30" rx="3" fill="#f8fafc"/><rect x="216" y="13" width="28" height="9" fill="#38bdf8"/></svg>`);
+
+// --- CLASSES ---
+class Player {
+  constructor() { this.reset(); }
   reset() {
-    this.col = 4;
-    this.row = 2;
-    this.worldX = 4 * GRID_SIZE;
-    this.worldY = 2 * GRID_SIZE;
+    this.col = 4; this.row = 2;
+    this.x = this.col * GRID_SIZE; this.y = this.row * GRID_SIZE;
+    this.animX = this.x; this.animY = this.y;
+    this.hopT = 1; this.isDead = false;
   }
-};
+  hop(dCol, dRow) {
+    if (this.hopT < 0.8 || this.isDead) return;
+    this.col = Math.max(0, Math.min(COLS - 1, this.col + dCol));
+    this.row = Math.max(0, this.row + dRow);
+    this.x = this.col * GRID_SIZE;
+    this.y = this.row * GRID_SIZE;
+    this.hopT = 0;
+    playSound('hop');
+    spawnParticles(this.animX + GRID_SIZE/2, canvas.height - (this.animY - cameraY), '#e2e8f0', 5);
+    
+    if (this.row > maxRow) {
+      maxRow = this.row; score = maxRow * 10;
+      if (score > highScore) checkAndUpdateHighScore(score);
+    }
+  }
+  update(dt) {
+    if (this.hopT < 1) {
+      this.hopT += dt * 6; // Animation speed
+      if (this.hopT > 1) this.hopT = 1;
+      // Smooth interpolation
+      this.animX += (this.x - this.animX) * 0.4;
+      this.animY += (this.y - this.animY) * 0.4;
+    } else {
+      this.animX = this.x; this.animY = this.y;
+    }
+  }
+  draw(ctx, screenY) {
+    if (this.isDead) return;
+    const skin = SKINS.find(s => s.id === currentSkin);
+    const cx = this.animX + GRID_SIZE / 2;
+    const cy = screenY + GRID_SIZE / 2;
+    
+    // Powerup Aura
+    if (powerupTimer > 0) {
+      ctx.beginPath(); ctx.arc(cx, cy, GRID_SIZE*0.7, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(245, 158, 11, ${0.3 + Math.sin(Date.now()/50)*0.2})`; ctx.fill();
+    } else if (hasShield) {
+      ctx.beginPath(); ctx.arc(cx, cy, GRID_SIZE*0.6, 0, Math.PI*2);
+      ctx.strokeStyle = '#7dd3fc'; ctx.lineWidth = 3; ctx.stroke();
+    }
 
-// --- PROCEDURAL WORLD GENERATION ---
+    ctx.save();
+    ctx.translate(cx, cy);
+    
+    // Squash & Stretch
+    if (this.hopT < 1) {
+      const arc = Math.sin(this.hopT * Math.PI);
+      ctx.translate(0, -arc * (GRID_SIZE * 0.4));
+      ctx.scale(1 - arc * 0.15, 1 + arc * 0.2);
+    }
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(0, 16, 14, 4, 0, 0, Math.PI*2); ctx.fill();
+    // Body
+    ctx.fillStyle = skin.color; ctx.beginPath(); ctx.ellipse(0, 0, 16, 18, 0, 0, Math.PI*2); ctx.fill();
+    // Belly
+    ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.ellipse(0, 3, 10, 12, 0, 0, Math.PI*2); ctx.fill();
+    // Eyes
+    ctx.fillStyle = skin.color;
+    ctx.beginPath(); ctx.arc(-5, -6, 2.5, 0, Math.PI*2); ctx.arc(5, -6, 2.5, 0, Math.PI*2); ctx.fill();
+    // Beak
+    ctx.fillStyle = skin.beak; ctx.beginPath(); ctx.moveTo(-4, -3); ctx.lineTo(4, -3); ctx.lineTo(0, 4); ctx.fill();
+    // Glasses
+    if (skin.glasses) {
+      ctx.fillStyle = '#000'; ctx.fillRect(-10, -9, 20, 6);
+      ctx.fillStyle = '#fff'; ctx.fillRect(-8, -8, 4, 2); ctx.fillRect(2, -8, 4, 2);
+    }
+    
+    ctx.restore();
+  }
+}
+
+const player = new Player();
 const generatedRows = new Map();
-let lastChunkType = 'SAFE';
-let currentChunkLength = 5;
 
+// --- MAP GENERATION (Progressive Difficulty) ---
 function getOrCreateRow(r) {
   if (generatedRows.has(r)) return generatedRows.get(r);
 
-  let type = 'SAFE';
-  let speed = 0;
-  let obstacles = [];
+  const diff = Math.min(1, maxRow / 100); // 0 to 1 over 100 rows
+  let type = 'SAFE', speed = 0, obstacles = [], items = [];
 
-  if (r < 4) {
-    type = 'SAFE';
-  } else {
-    currentChunkLength--;
-    if (currentChunkLength <= 0) {
-      if (lastChunkType === 'SAFE') {
-        lastChunkType = Math.random() < 0.5 ? 'ROAD' : 'WATER';
-        currentChunkLength = Math.floor(Math.random() * 3) + 2;
-      } else {
-        lastChunkType = 'SAFE';
-        currentChunkLength = Math.floor(Math.random() * 2) + 1;
-      }
-    }
-    type = lastChunkType;
+  if (r > 3) {
+    const rand = Math.random();
+    if (r < 10) type = rand < 0.6 ? 'ROAD' : 'SAFE'; // Easy
+    else if (r < 30) type = rand < 0.4 ? 'ROAD' : (rand < 0.8 ? 'WATER' : 'SAFE'); // Medium
+    else type = rand < 0.4 ? 'ROAD' : (rand < 0.85 ? 'WATER' : 'SAFE'); // Hard
 
-    if (type === 'ROAD' || type === 'WATER') {
+    // Spawn Obstacles
+    if (type !== 'SAFE') {
       const dir = Math.random() < 0.5 ? 1 : -1;
-      const speedMult = 1 + Math.min(score / 1500, 1.5);
-      speed = dir * (1.5 + Math.random() * 1.5) * speedMult;
-      const itemWidthUnits = Math.floor(Math.random() * 2) + 2;
-      const itemWidth = itemWidthUnits * GRID_SIZE;
-      const spacing = itemWidth + (GRID_SIZE * 2.5) + Math.random() * (GRID_SIZE * 2);
+      speed = dir * (1.5 + Math.random() * 2) * (1 + diff);
+      const isOrca = type === 'WATER' && diff > 0.4 && Math.random() < 0.3; // Orcas appear late
+      const width = (Math.floor(Math.random() * 2) + 2) * GRID_SIZE;
+      const spacing = width + (GRID_SIZE * 2.5) + Math.random() * (GRID_SIZE * 2) * (1 - diff*0.5);
 
       for (let x = -300; x < canvas.width + 400; x += spacing) {
-        obstacles.push({ x: x, width: itemWidth });
+        obstacles.push({ x, width, isMelting: type === 'WATER' && !isOrca && diff > 0.3 && Math.random() < 0.3, meltTimer: 0, isOrca });
       }
+    }
+
+    // Spawn Items
+    if (Math.random() < 0.15) {
+      const ix = Math.floor(Math.random() * COLS) * GRID_SIZE;
+      const itemType = Math.random() < 0.05 ? 'SARDINE' : (Math.random() < 0.1 ? 'SHIELD' : 'FISH');
+      items.push({ x: ix, type: itemType, collected: false });
     }
   }
 
-  const rowData = { r, type, speed, obstacles };
+  const rowData = { r, type, speed, obstacles, items };
   generatedRows.set(r, rowData);
   return rowData;
 }
 
-// --- CONTROLS ---
-let touchStartX = 0;
-let touchStartY = 0;
-const MIN_SWIPE_DIST = 20;
-
-function movePlayer(dCol, dRow) {
-  if (gameOver) return;
-
-  const nextCol = player.col + dCol;
-  const nextRow = player.row + dRow;
-
-  if (nextCol >= 0 && nextCol < COLS) {
-    player.col = nextCol;
-    player.worldX = player.col * GRID_SIZE;
+// --- PARTICLES ---
+function spawnParticles(x, y, color, count) {
+  for(let i=0; i<count; i++) {
+    particles.push({
+      x, y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10 - 2,
+      life: 1, color, size: Math.random()*4 + 2
+    });
   }
-
-  if (nextRow >= 0) {
-    player.row = nextRow;
-    player.worldY = player.row * GRID_SIZE;
-
-    if (player.row > maxRow) {
-      maxRow = player.row;
-      score = maxRow * 10;
-      checkAndUpdateHighScore(score);
-    }
-  }
-
-  playHopSound();
 }
 
-window.addEventListener('touchstart', (e) => {
-  initAudio();
-  touchStartX = e.changedTouches[0].clientX;
-  touchStartY = e.changedTouches[0].clientY;
-}, { passive: false });
-
-window.addEventListener('touchend', (e) => {
-  if (gameOver) {
-    restartGame();
-    return;
-  }
-
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  const dy = e.changedTouches[0].clientY - touchStartY;
-
-  if (Math.abs(dx) < MIN_SWIPE_DIST && Math.abs(dy) < MIN_SWIPE_DIST) return;
-
-  if (Math.abs(dx) > Math.abs(dy)) {
-    if (dx > 0) movePlayer(1, 0);
-    else movePlayer(-1, 0);
-  } else {
-    if (dy < 0) movePlayer(0, 1);
-    else movePlayer(0, -1);
-  }
-}, { passive: false });
-
-window.addEventListener('keydown', (e) => {
-  if (gameOver) {
-    if (e.key.toLowerCase() === 'r') restartGame();
-    return;
-  }
-  if (e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, 1);
-  if (e.key === 'ArrowDown' || e.key === 's') movePlayer(0, -1);
-  if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0);
-  if (e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0);
+// --- INPUTS ---
+let touchStartX = 0, touchStartY = 0;
+window.addEventListener('touchstart', e => { initAudio(); touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive: false});
+window.addEventListener('touchend', e => {
+  if (gameState !== 'PLAY') return;
+  const dx = e.changedTouches[0].clientX - touchStartX, dy = e.changedTouches[0].clientY - touchStartY;
+  if (Math.abs(dx) < 20 && Math.abs(dy) < 20) return;
+  if (Math.abs(dx) > Math.abs(dy)) player.hop(dx > 0 ? 1 : -1, 0); else player.hop(0, dy < 0 ? 1 : -1);
+}, {passive: false});
+window.addEventListener('keydown', e => {
+  if (gameState !== 'PLAY') return;
+  if(e.key==='ArrowUp'||e.key==='w') player.hop(0,1); if(e.key==='ArrowDown'||e.key==='s') player.hop(0,-1);
+  if(e.key==='ArrowLeft'||e.key==='a') player.hop(-1,0); if(e.key==='ArrowRight'||e.key==='d') player.hop(1,0);
 });
 
-// --- ENGINE UPDATE & LOOP ---
-function update() {
-  if (gameOver) return;
+// --- MENU LOGIC ---
+function startGame() {
+  document.getElementById('startMenu').classList.add('hidden');
+  document.getElementById('gameHud').style.opacity = 1;
+  gameState = 'PLAY'; score = 0; maxRow = 0; cameraY = 0; powerupTimer = 0; hasShield = false;
+  generatedRows.clear(); player.reset();
+  updateHUD();
+}
+function openShop() {
+  document.getElementById('startMenu').classList.add('hidden');
+  document.getElementById('shop').style.display = 'flex';
+  document.getElementById('shopFish').innerText = fishCoins;
+  renderShop();
+}
+function closeShop() {
+  document.getElementById('shop').style.display = 'none';
+  document.getElementById('startMenu').classList.remove('hidden');
+  saveProgress();
+}
+function renderShop() {
+  const list = document.getElementById('skinList'); list.innerHTML = '';
+  SKINS.forEach(s => {
+    const isUnlocked = unlockedSkins.includes(s.id);
+    const isEquipped = currentSkin === s.id;
+    const div = document.createElement('div');
+    div.className = `skin-card ${isEquipped ? 'active' : ''}`;
+    div.innerHTML = `
+      <div><div class="skin-info">${s.name}</div>${!isUnlocked ? `<div class="skin-cost">🐟 ${s.cost}</div>` : ''}</div>
+      <button class="skin-btn ${isEquipped ? 'alt' : ''}" onclick="buySkin('${s.id}')">${isEquipped ? 'Equipped' : (isUnlocked ? 'Equip' : 'Buy')}</button>
+    `;
+    list.appendChild(div);
+  });
+}
+function buySkin(id) {
+  const skin = SKINS.find(s => s.id === id);
+  if (!unlockedSkins.includes(id)) {
+    if (fishCoins >= skin.cost) { fishCoins -= skin.cost; unlockedSkins.push(id); currentSkin = id; playSound('coin'); }
+    else { vibrate([50, 50, 50]); return; } // Failed
+  } else { currentSkin = id; }
+  renderShop(); document.getElementById('shopFish').innerText = fishCoins;
+}
+function triggerGameOver() {
+  gameState = 'OVER'; player.isDead = true; saveProgress();
+  setTimeout(() => { document.getElementById('startMenu').classList.remove('hidden'); document.getElementById('gameHud').style.opacity = 0; }, 1000);
+}
+function updateHUD() {
+  document.getElementById('scoreDisplay').innerText = score;
+  document.getElementById('fishDisplay').innerText = `🐟 ${fishCoins}`;
+  document.getElementById('statusDisplay').innerText = hasShield ? '🛡️' : '';
+}
 
-  autoScrollSpeed = 0.25 + Math.min(score / 2000, 0.55);
-  cameraY += autoScrollSpeed;
+// --- MAIN LOOP ---
+let lastTime = performance.now();
+function loop(time) {
+  const dt = (time - lastTime) / 1000; lastTime = time;
+  
+  if (gameState === 'PLAY') {
+    player.update(dt);
+    
+    // Auto Scroll
+    autoScrollSpeed = 0.25 + Math.min(score / 2000, 0.6);
+    cameraY += autoScrollSpeed;
+    const targetCam = player.animY - canvas.height * 0.4;
+    if (targetCam > cameraY) cameraY += (targetCam - cameraY) * 0.1;
 
-  const targetCamY = player.worldY - (canvas.height * 0.45);
-  if (targetCamY > cameraY) {
-    cameraY += (targetCamY - cameraY) * 0.12;
-  }
+    const screenY = canvas.height - (player.animY - cameraY) - GRID_SIZE;
+    if (screenY > canvas.height + 20) { playSound('splash'); spawnParticles(player.animX, canvas.height, '#38bdf8', 20); triggerGameOver(); }
 
-  const playerScreenY = canvas.height - (player.worldY - cameraY) - GRID_SIZE;
+    // Powerups
+    if (powerupTimer > 0) {
+      powerupTimer -= dt;
+      document.getElementById('powerupBar').style.display = 'block';
+      document.getElementById('powerupFill').style.width = `${(powerupTimer/4)*100}%`;
+      spawnParticles(player.animX + GRID_SIZE/2, screenY + GRID_SIZE, '#f59e0b', 1); // Trail
+      if (powerupTimer <= 0) document.getElementById('powerupBar').style.display = 'none';
+    }
 
-  if (playerScreenY > canvas.height + 20) {
-    playSplashSound();
-    triggerGameOver();
-    return;
-  }
+    let onPlatform = false;
+    const curRow = getOrCreateRow(player.row);
 
-  const currentRow = getOrCreateRow(player.row);
-  let onPlatform = false;
-
-  const minVisibleRow = Math.floor(cameraY / GRID_SIZE) - 2;
-  const maxVisibleRow = minVisibleRow + Math.ceil(canvas.height / GRID_SIZE) + 3;
-
-  for (let r = minVisibleRow; r <= maxVisibleRow; r++) {
-    const rowData = getOrCreateRow(r);
-    if (rowData.speed !== 0) {
-      rowData.obstacles.forEach(obs => {
-        obs.x += rowData.speed;
-
-        if (rowData.speed > 0 && obs.x > canvas.width + 200) obs.x = -obs.width - 100;
-        else if (rowData.speed < 0 && obs.x + obs.width < -200) obs.x = canvas.width + 100;
-
-        if (r === player.row) {
-          const overlap = player.worldX < obs.x + obs.width && player.worldX + GRID_SIZE > obs.x;
-          if (rowData.type === 'WATER' && overlap) {
-            onPlatform = true;
-            player.worldX += rowData.speed;
-            player.col = Math.round(player.worldX / GRID_SIZE);
-          } else if (rowData.type === 'ROAD' && overlap) {
-            playCrashSound();
-            triggerGameOver();
-          }
+    // Obstacle Logic
+    for (let r = Math.floor(cameraY / GRID_SIZE) - 2; r <= Math.ceil(canvas.height / GRID_SIZE) + Math.floor(cameraY / GRID_SIZE) + 2; r++) {
+      const row = getOrCreateRow(r);
+      
+      // Update Items
+      row.items.forEach(item => {
+        if (!item.collected && r === player.row && Math.abs(player.animX - item.x) < GRID_SIZE/2) {
+          item.collected = true;
+          if (item.type === 'FISH') { fishCoins++; score+=10; playSound('coin'); spawnParticles(item.x, canvas.height - (r*GRID_SIZE-cameraY), '#38bdf8', 5); }
+          else if (item.type === 'SARDINE') { powerupTimer = 4; playSound('powerup'); }
+          else if (item.type === 'SHIELD') { hasShield = true; playSound('powerup'); }
+          updateHUD();
         }
       });
+
+      // Update Obstacles
+      if (row.speed !== 0) {
+        row.obstacles.forEach(obs => {
+          obs.x += row.speed;
+          if (row.speed > 0 && obs.x > canvas.width + 200) obs.x = -obs.width - 100;
+          else if (row.speed < 0 && obs.x + obs.width < -200) obs.x = canvas.width + 100;
+
+          // Collision
+          if (r === player.row) {
+            const overlap = player.animX < obs.x + obs.width - 10 && player.animX + GRID_SIZE > obs.x + 10;
+            if (row.type === 'WATER' && overlap) {
+              if (obs.isOrca) {
+                if (powerupTimer > 0) { /* invincible */ } 
+                else if (hasShield) { hasShield = false; player.hop(0, -1); playSound('crash'); updateHUD(); }
+                else { playSound('splash'); spawnParticles(player.animX, screenY, '#ef4444', 20); triggerGameOver(); }
+              } else {
+                onPlatform = true;
+                player.x += row.speed; player.animX += row.speed; player.col = Math.round(player.x / GRID_SIZE);
+                if (obs.isMelting && player.hopT === 1) obs.meltTimer += dt;
+              }
+            } else if (row.type === 'ROAD' && overlap) {
+              if (powerupTimer > 0) { obs.x = -1000; spawnParticles(player.animX, screenY, '#f8fafc', 10); playSound('crash'); }
+              else if (hasShield) { hasShield = false; player.hop(0, -1); playSound('crash'); updateHUD(); }
+ else { playSound('crash'); spawnParticles(player.animX, screenY, '#ef4444', 20); triggerGameOver(); }
+            }
+          }
+          if (obs.isMelting && obs.meltTimer > 1.5) obs.x = -1000; // Sunk
+        });
+      }
     }
+
+    if (curRow.type === 'WATER' && !onPlatform && player.hopT === 1) { playSound('splash'); spawnParticles(player.animX, screenY, '#38bdf8', 20); triggerGameOver(); }
+    if (player.animX < -GRID_SIZE/2 || player.animX > canvas.width - GRID_SIZE/2) { playSound('splash'); triggerGameOver(); }
   }
 
-  if (currentRow.type === 'WATER' && !onPlatform) {
-    playSplashSound();
-    triggerGameOver();
-  }
+  // --- RENDER ---
+  // Dynamic Sky Gradient (Day -> Sunset -> Night -> Aurora) based on score
+  const cycle = (maxRow / 100) % 1;
+  let bgGrad = ctx.createLinearGradient(0,0,0,canvas.height);
+  if (cycle < 0.3) { bgGrad.addColorStop(0, '#38bdf8'); bgGrad.addColorStop(1, '#e0f2fe'); }
+  else if (cycle < 0.6) { bgGrad.addColorStop(0, '#f43f5e'); bgGrad.addColorStop(1, '#fcd34d'); }
+  else if (cycle < 0.8) { bgGrad.addColorStop(0, '#0f172a'); bgGrad.addColorStop(1, '#312e81'); }
+  else { bgGrad.addColorStop(0, '#064e3b'); bgGrad.addColorStop(1, '#10b981'); } // Aurora
+  ctx.fillStyle = bgGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  if (player.worldX < 0 || player.worldX + GRID_SIZE > canvas.width) {
-    playSplashSound();
-    triggerGameOver();
-  }
-}
+  const minR = Math.max(0, Math.floor(cameraY / GRID_SIZE) - 1);
+  const maxR = minR + Math.ceil(canvas.height / GRID_SIZE) + 2;
 
-function triggerGameOver() {
-  gameOver = true;
-}
+  // Render Rows
+  for (let r = minR; r <= maxR; r++) {
+    const row = getOrCreateRow(r);
+    const sy = canvas.height - (r * GRID_SIZE - cameraY) - GRID_SIZE;
+    
+    if (row.type === 'SAFE') { ctx.fillStyle = (r%2===0)?'#f1f5f9':'#e2e8f0'; ctx.fillRect(0, sy, canvas.width, GRID_SIZE+1); }
+    else if (row.type === 'WATER') { ctx.fillStyle = '#0284c7'; ctx.fillRect(0, sy, canvas.width, GRID_SIZE+1); }
+    else if (row.type === 'ROAD') { ctx.fillStyle = '#1e293b'; ctx.fillRect(0, sy, canvas.width, GRID_SIZE+1); }
 
-function restartGame() {
-  score = 0; maxRow = 0; cameraY = 0; gameOver = false; isNewHighScore = false;
-  generatedRows.clear(); lastChunkType = 'SAFE'; currentChunkLength = 5;
-  player.reset();
-}
+    // Render Items
+    ctx.font = `${GRID_SIZE*0.6}px sans-serif`; ctx.textAlign = 'center';
+    row.items.forEach(i => {
+      if (!i.collected) {
+        const floatY = Math.sin(Date.now()/200)*3;
+        ctx.fillText(i.type==='FISH'?'🐟':(i.type==='SARDINE'?'🌟':'🛡️'), i.x + GRID_SIZE/2, sy + GRID_SIZE*0.7 + floatY);
+      }
+    });
 
-function render() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  const minVisibleRow = Math.max(0, Math.floor(cameraY / GRID_SIZE) - 2);
-  const maxVisibleRow = minVisibleRow + Math.ceil(canvas.height / GRID_SIZE) + 3;
-
-  // 1. Terrain Rows
-  for (let r = minVisibleRow; r <= maxVisibleRow; r++) {
-    const rowData = getOrCreateRow(r);
-    const screenY = canvas.height - (r * GRID_SIZE - cameraY) - GRID_SIZE;
-
-    if (rowData.type === 'SAFE') {
-      ctx.fillStyle = (r % 2 === 0) ? '#f1f5f9' : '#e2e8f0';
-      ctx.fillRect(0, screenY, canvas.width, GRID_SIZE + 1);
-    } else if (rowData.type === 'WATER') {
-      ctx.fillStyle = '#0284c7';
-      ctx.fillRect(0, screenY, canvas.width, GRID_SIZE + 1);
-    } else if (rowData.type === 'ROAD') {
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(0, screenY, canvas.width, GRID_SIZE + 1);
-    }
-  }
-
-  // 2. High-Detail SVG Obstacles
-  for (let r = minVisibleRow; r <= maxVisibleRow; r++) {
-    const rowData = getOrCreateRow(r);
-    const screenY = canvas.height - (r * GRID_SIZE - cameraY) - GRID_SIZE;
-
-    rowData.obstacles.forEach(obs => {
-      if (rowData.type === 'WATER') {
-        ctx.drawImage(iceFloeImg, obs.x, screenY - 4, obs.width, GRID_SIZE + 8);
-      } else if (rowData.type === 'ROAD') {
-        ctx.save();
-        if (rowData.speed < 0) {
-          ctx.translate(obs.x + obs.width, screenY);
-          ctx.scale(-1, 1);
-          ctx.drawImage(shipImg, 0, -4, obs.width, GRID_SIZE + 8);
+    // Render Obstacles
+    row.obstacles.forEach(obs => {
+      if (row.type === 'WATER') {
+        if (obs.isOrca) {
+          ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.ellipse(obs.x + obs.width/2, sy + GRID_SIZE/2, obs.width/2, 10, 0, 0, Math.PI*2); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(obs.x + obs.width/2, sy + GRID_SIZE/2); ctx.lineTo(obs.x + obs.width/2 - (row.speed>0?15:-15), sy - 15); ctx.lineTo(obs.x + obs.width/2 + (row.speed>0?10:-10), sy + GRID_SIZE/2); ctx.fill();
         } else {
-          ctx.drawImage(shipImg, obs.x, screenY - 4, obs.width, GRID_SIZE + 8);
+          ctx.globalAlpha = obs.isMelting ? Math.max(0, 1 - (obs.meltTimer/1.5)) : 1;
+          if (obs.isMelting && Math.random()<0.2) ctx.translate((Math.random()-0.5)*4, 0); // Shake
+          ctx.drawImage(iceImg, obs.x, sy, obs.width, GRID_SIZE);
+          ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1;
         }
+      } else if (row.type === 'ROAD') {
+        ctx.save();
+        if (row.speed < 0) { ctx.translate(obs.x + obs.width, sy); ctx.scale(-1, 1); ctx.drawImage(shipImg, 0, -4, obs.width, GRID_SIZE + 8); }
+        else { ctx.drawImage(shipImg, obs.x, sy - 4, obs.width, GRID_SIZE + 8); }
         ctx.restore();
       }
     });
   }
 
-  // 3. Player Penguin
-  const playerScreenX = player.worldX;
-  const playerScreenY = canvas.height - (player.worldY - cameraY) - GRID_SIZE;
-  ctx.drawImage(penguinImg, playerScreenX, playerScreenY, GRID_SIZE, GRID_SIZE);
+  // Render Player & Particles
+  player.draw(ctx, canvas.height - (player.animY - cameraY) - GRID_SIZE);
+  
+  particles.forEach((p, i) => {
+    p.x += p.vx; p.y += p.vy; p.life -= dt*2;
+    ctx.fillStyle = p.color; ctx.globalAlpha = Math.max(0, p.life);
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+    if (p.life <= 0) particles.splice(i, 1);
+  });
+  ctx.globalAlpha = 1;
 
-  // 4. Update HUD Text
-  document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
-  document.getElementById('highScoreDisplay').innerText = `BEST: ${highScore}`;
-
-  // 5. Game Over Screen Overlay
-  if (gameOver) {
-    ctx.fillStyle = 'rgba(12, 20, 39, 0.92)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#ef4444';
-    ctx.font = '800 32px system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height * 0.4);
-
-    if (isNewHighScore) {
-      ctx.fillStyle = '#f59e0b';
-      ctx.font = '700 22px system-ui, sans-serif';
-      ctx.fillText('NEW HIGH SCORE!', canvas.width / 2, canvas.height * 0.48);
-    }
-
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = '600 18px system-ui, sans-serif';
-    ctx.fillText(`FINAL SCORE: ${score}`, canvas.width / 2, canvas.height * (isNewHighScore ? 0.54 : 0.48));
-    ctx.fillText('TAP ANYWHERE TO RESTART', canvas.width / 2, canvas.height * 0.62);
-  }
+  requestAnimationFrame(loop);
 }
-
-function gameLoop() {
-  update();
-  render();
-  requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>
