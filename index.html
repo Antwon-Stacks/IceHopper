@@ -2,70 +2,80 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Ice Hopper - Endless Edition</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Ice Hopper - GlacierPlay</title>
   <style>
     * {
       box-sizing: border-box;
       user-select: none;
       -webkit-user-select: none;
       touch-action: none;
-    }
-    body {
-      background-color: #0c1427;
-      color: #f8fafc;
-      font-family: system-ui, -apple-system, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
       margin: 0;
+      padding: 0;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
       overflow: hidden;
+      background-color: #0c1427;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
-    h1 {
-      margin: 0 0 6px 0;
-      font-size: 24px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      background: linear-gradient(135deg, #7dd3fc, #38bdf8);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    #gameCanvas {
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      background-color: #0284c7;
     }
+    /* Floating Glassmorphic Mobile HUD */
     .hud {
+      position: absolute;
+      top: env(safe-area-inset-top, 16px);
+      left: 16px;
+      right: 16px;
       display: flex;
       justify-content: space-between;
-      width: 90vw;
-      max-width: 480px;
-      margin-bottom: 8px;
-      font-weight: 700;
+      align-items: center;
+      padding: 10px 18px;
+      background: rgba(12, 20, 39, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      color: #f8fafc;
+      font-weight: 800;
       font-size: 15px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      pointer-events: none;
+      z-index: 10;
     }
-    .hud #highScoreDisplay { color: #f59e0b; }
-    canvas {
-      border: 3px solid rgba(56, 189, 248, 0.4);
-      border-radius: 12px;
-      box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.7);
-      background-color: #0284c7;
-      width: 90vw;
-      height: 90vw;
-      max-width: 480px;
-      max-height: 480px;
+    .hud #highScoreDisplay {
+      color: #f59e0b;
     }
-    .instructions { margin-top: 10px; color: #94a3b8; font-size: 12px; font-weight: 600; }
+    .instructions-overlay {
+      position: absolute;
+      bottom: env(safe-area-inset-bottom, 24px);
+      width: 100%;
+      text-align: center;
+      color: rgba(248, 250, 252, 0.6);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      pointer-events: none;
+      z-index: 10;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Ice Hopper</h1>
   <div class="hud">
     <div id="scoreDisplay">SCORE: 0</div>
     <div id="highScoreDisplay">BEST: 0</div>
   </div>
 
-  <canvas id="gameCanvas" width="500" height="500"></canvas>
-  <div class="instructions">SWIPE to hop forward, left, right, or back</div>
+  <canvas id="gameCanvas"></canvas>
+  <div class="instructions-overlay">Swipe to Hop</div>
 
 <script>
 // --- HIGH SCORE & GLACIERPLAY BRIDGE ---
@@ -144,12 +154,109 @@ function playCrashSound() {
   osc.start(); osc.stop(audioCtx.currentTime + 0.25);
 }
 
-// --- ENGINE SETUP & VECTOR RENDERERS ---
+// --- HIGH-DETAIL SVG ASSETS (EMBEDDED DATA URIs) ---
+const svgToImg = (svg) => {
+  const img = new Image();
+  img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  return img;
+};
+
+// 1. Detailed Ice Floe SVG
+const iceFloeImg = svgToImg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
+  <defs>
+    <linearGradient id="iceGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#e0f2fe"/>
+      <stop offset="100%" stop-color="#bae6fd"/>
+    </linearGradient>
+  </defs>
+  <!-- Underwater Ice Shelf -->
+  <path d="M8,25 C25,12 175,12 192,25 C200,45 195,78 180,88 C150,98 50,98 20,88 C5,78 0,45 8,25 Z" fill="#38bdf8" opacity="0.45"/>
+  <!-- Top Surface -->
+  <path d="M14,18 C32,8 168,8 186,18 C194,36 188,68 174,78 C144,88 56,88 26,78 C12,68 6,36 14,18 Z" fill="url(#iceGrad)"/>
+  <!-- Snow Cap Drift -->
+  <path d="M28,20 C50,14 100,16 125,22 C90,28 45,26 28,20 Z" fill="#ffffff" opacity="0.95"/>
+  <!-- Surface Cracks -->
+  <path d="M65,35 L85,50 L80,65 M85,50 L105,45" stroke="#0284c7" stroke-width="2.5" fill="none" opacity="0.5" stroke-linecap="round"/>
+  <path d="M130,22 L145,38 L160,32" stroke="#0284c7" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
+</svg>`);
+
+// 2. Detailed Cargo Ship SVG
+const shipImg = svgToImg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100">
+  <!-- Bow/Stern Water Spray -->
+  <ellipse cx="285" cy="72" rx="14" ry="6" fill="#ffffff" opacity="0.4"/>
+  <ellipse cx="15" cy="72" rx="10" ry="5" fill="#ffffff" opacity="0.3"/>
+  <!-- Lower Steel Hull -->
+  <path d="M8,48 L282,48 L295,68 C290,82 270,86 250,86 L40,86 C20,86 8,76 8,48 Z" fill="#7f1d1d"/>
+  <!-- Upper Hull Stripe -->
+  <path d="M4,38 L286,38 L291,50 L8,50 Z" fill="#dc2626"/>
+  <line x1="4" y1="44" x2="288" y2="44" stroke="#b91c1c" stroke-width="1.5"/>
+  <!-- Stacked Cargo Containers -->
+  <rect x="22" y="16" width="46" height="22" rx="2" fill="#0284c7" stroke="#0369a1" stroke-width="1.5"/>
+  <line x1="33" y1="16" x2="33" y2="38" stroke="#0369a1"/>
+  <line x1="45" y1="16" x2="45" y2="38" stroke="#0369a1"/>
+  <line x1="57" y1="16" x2="57" y2="38" stroke="#0369a1"/>
+
+  <rect x="74" y="16" width="46" height="22" rx="2" fill="#eab308" stroke="#ca8a04" stroke-width="1.5"/>
+  <line x1="85" y1="16" x2="85" y2="38" stroke="#ca8a04"/>
+  <line x1="97" y1="16" x2="97" y2="38" stroke="#ca8a04"/>
+  <line x1="109" y1="16" x2="109" y2="38" stroke="#ca8a04"/>
+
+  <rect x="126" y="16" width="46" height="22" rx="2" fill="#059669" stroke="#047857" stroke-width="1.5"/>
+  <line x1="137" y1="16" x2="137" y2="38" stroke="#047857"/>
+  <line x1="149" y1="16" x2="149" y2="38" stroke="#047857"/>
+  <line x1="161" y1="16" x2="161" y2="38" stroke="#047857"/>
+
+  <!-- Upper Tier Containers -->
+  <rect x="48" y="-4" width="46" height="20" rx="2" fill="#d97706" stroke="#b45309" stroke-width="1.5"/>
+  <rect x="100" y="-4" width="46" height="20" rx="2" fill="#0284c7" stroke="#0369a1" stroke-width="1.5"/>
+
+  <!-- Bridge / Navigation Cabin -->
+  <rect x="212" y="8" width="36" height="30" rx="3" fill="#f8fafc"/>
+  <rect x="216" y="13" width="28" height="9" rx="1.5" fill="#38bdf8"/>
+  <rect x="225" y="-4" width="10" height="12" fill="#0f172a"/>
+  <rect x="223" y="-7" width="14" height="3" fill="#dc2626"/>
+  <!-- Exhaust Steam -->
+  <circle cx="221" cy="-14" r="4" fill="#f8fafc" opacity="0.6"/>
+  <circle cx="215" cy="-20" r="6" fill="#f8fafc" opacity="0.3"/>
+</svg>`);
+
+// 3. Detailed Penguin SVG
+const penguinImg = svgToImg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <ellipse cx="50" cy="88" rx="32" ry="10" fill="#000000" opacity="0.3"/>
+  <ellipse cx="32" cy="82" rx="10" ry="6" fill="#f97316"/>
+  <ellipse cx="68" cy="82" rx="10" ry="6" fill="#f97316"/>
+  <path d="M50,10 C25,10 18,35 18,60 C18,80 32,85 50,85 C68,85 82,80 82,60 C82,35 75,10 50,10 Z" fill="#0f172a"/>
+  <ellipse cx="16" cy="52" rx="7" ry="18" transform="rotate(15, 16, 52)" fill="#0f172a"/>
+  <ellipse cx="84" cy="52" rx="7" ry="18" transform="rotate(-15, 84, 52)" fill="#0f172a"/>
+  <path d="M50,28 C35,28 30,48 30,62 C30,78 38,81 50,81 C62,81 70,78 70,62 C70,48 65,28 50,28 Z" fill="#ffffff"/>
+  <ellipse cx="36" cy="40" rx="4" ry="2.5" fill="#f43f5e" opacity="0.3"/>
+  <ellipse cx="64" cy="40" rx="4" ry="2.5" fill="#f43f5e" opacity="0.3"/>
+  <circle cx="38" cy="34" r="5" fill="#0f172a"/>
+  <circle cx="62" cy="34" r="5" fill="#0f172a"/>
+  <circle cx="36" cy="32" r="2" fill="#ffffff"/>
+  <circle cx="60" cy="32" r="2" fill="#ffffff"/>
+  <path d="M43,40 Q50,38 57,40 Q50,52 43,40 Z" fill="#fb923c"/>
+</svg>`);
+
+// --- FULL-SCREEN CANVAS & ENGINE SETUP ---
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const GRID_SIZE = 50;
+let GRID_SIZE = 50;
 const COLS = 10;
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  GRID_SIZE = canvas.width / COLS; // Responsive 10-column grid scaling
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
 let score = 0;
 let maxRow = 0;
 let gameOver = false;
@@ -169,126 +276,7 @@ const player = {
   }
 };
 
-function drawPenguin(screenX, screenY) {
-  const cx = screenX + GRID_SIZE / 2;
-  const cy = screenY + GRID_SIZE / 2;
-
-  // Shadow
-  ctx.fillStyle = 'rgba(15, 23, 42, 0.35)';
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + 18, 16, 6, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Feet
-  ctx.fillStyle = '#f97316';
-  ctx.beginPath();
-  ctx.ellipse(cx - 8, cy + 16, 5, 3, -0.2, 0, Math.PI * 2);
-  ctx.ellipse(cx + 8, cy + 16, 5, 3, 0.2, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Body
-  const bodyGrad = ctx.createLinearGradient(cx, cy - 20, cx, cy + 16);
-  bodyGrad.addColorStop(0, '#1e293b');
-  bodyGrad.addColorStop(1, '#0f172a');
-  ctx.fillStyle = bodyGrad;
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, 17, 19, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Flippers
-  ctx.fillStyle = '#0f172a';
-  ctx.beginPath();
-  ctx.ellipse(cx - 16, cy + 2, 4, 10, 0.3, 0, Math.PI * 2);
-  ctx.ellipse(cx + 16, cy + 2, 4, 10, -0.3, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Belly
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.ellipse(cx, cy + 3, 11, 13, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Eyes & Beak
-  ctx.fillStyle = '#0f172a';
-  ctx.beginPath();
-  ctx.arc(cx - 5, cy - 6, 2.5, 0, Math.PI * 2);
-  ctx.arc(cx + 5, cy - 6, 2.5, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(cx - 6, cy - 7, 1, 0, Math.PI * 2);
-  ctx.arc(cx + 4, cy - 7, 1, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#fb923c';
-  ctx.beginPath();
-  ctx.moveTo(cx - 4, cy - 3);
-  ctx.lineTo(cx + 4, cy - 3);
-  ctx.lineTo(cx, cy + 3);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function drawIceFloe(screenX, screenY, width) {
-  const height = 36;
-  const padY = screenY + 7;
-
-  ctx.fillStyle = 'rgba(56, 189, 248, 0.35)';
-  ctx.beginPath();
-  ctx.roundRect(screenX - 2, padY + 4, width + 4, height, 12);
-  ctx.fill();
-
-  const iceGrad = ctx.createLinearGradient(screenX, padY, screenX, padY + height);
-  iceGrad.addColorStop(0, '#ffffff');
-  iceGrad.addColorStop(0.4, '#e0f2fe');
-  iceGrad.addColorStop(1, '#bae6fd');
-  ctx.fillStyle = iceGrad;
-  ctx.beginPath();
-  ctx.roundRect(screenX, padY, width, height, 10);
-  ctx.fill();
-
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.roundRect(screenX + 3, padY + 3, width - 6, height - 6, 8);
-  ctx.stroke();
-}
-
-function drawShip(screenX, screenY, width, dir) {
-  const height = 32;
-  const padY = screenY + 9;
-
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-  ctx.beginPath();
-  if (dir > 0) ctx.ellipse(screenX - 8, padY + height / 2, 12, 6, 0, 0, Math.PI * 2);
-  else ctx.ellipse(screenX + width + 8, padY + height / 2, 12, 6, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  const hullGrad = ctx.createLinearGradient(screenX, padY, screenX, padY + height);
-  hullGrad.addColorStop(0, '#dc2626');
-  hullGrad.addColorStop(1, '#7f1d1d');
-  ctx.fillStyle = hullGrad;
-  ctx.beginPath();
-  ctx.roundRect(screenX, padY, width, height, [6, 14, 14, 6]);
-  ctx.fill();
-
-  const colors = ['#0284c7', '#eab308', '#059669', '#d97706'];
-  const blockWidth = 18;
-  let count = Math.floor((width - 24) / blockWidth);
-  for (let i = 0; i < count; i++) {
-    ctx.fillStyle = colors[i % colors.length];
-    ctx.fillRect(screenX + 8 + (i * blockWidth), padY + 4, blockWidth - 3, height - 12);
-  }
-
-  ctx.fillStyle = '#f8fafc';
-  const cabinX = dir > 0 ? screenX + width - 18 : screenX + 4;
-  ctx.fillRect(cabinX, padY + 2, 14, height - 8);
-  ctx.fillStyle = '#38bdf8';
-  ctx.fillRect(cabinX + 3, padY + 5, 8, 5);
-}
-
-// --- PROCEDURAL ROW GENERATOR ---
+// --- PROCEDURAL WORLD GENERATION ---
 const generatedRows = new Map();
 let lastChunkType = 'SAFE';
 let currentChunkLength = 5;
@@ -307,28 +295,24 @@ function getOrCreateRow(r) {
     if (currentChunkLength <= 0) {
       if (lastChunkType === 'SAFE') {
         lastChunkType = Math.random() < 0.5 ? 'ROAD' : 'WATER';
-        currentChunkLength = Math.floor(Math.random() * 3) + 2; // 2-4 rows
+        currentChunkLength = Math.floor(Math.random() * 3) + 2;
       } else {
         lastChunkType = 'SAFE';
-        currentChunkLength = Math.floor(Math.random() * 2) + 1; // 1-2 safe rows
+        currentChunkLength = Math.floor(Math.random() * 2) + 1;
       }
     }
     type = lastChunkType;
 
     if (type === 'ROAD' || type === 'WATER') {
       const dir = Math.random() < 0.5 ? 1 : -1;
-      const speedMult = 1 + Math.min(score / 1500, 1.5); // Speed ramps with score
+      const speedMult = 1 + Math.min(score / 1500, 1.5);
       speed = dir * (1.5 + Math.random() * 1.5) * speedMult;
-      const itemWidthUnits = Math.floor(Math.random() * 2) + 2; // 2 or 3 units wide
+      const itemWidthUnits = Math.floor(Math.random() * 2) + 2;
       const itemWidth = itemWidthUnits * GRID_SIZE;
-      const spacing = itemWidth + 120 + Math.random() * 100;
+      const spacing = itemWidth + (GRID_SIZE * 2.5) + Math.random() * (GRID_SIZE * 2);
 
-      for (let x = -200; x < canvas.width + 300; x += spacing) {
-        obstacles.push({
-          x: x,
-          width: itemWidth,
-          isPlatform: (type === 'WATER')
-        });
+      for (let x = -300; x < canvas.width + 400; x += spacing) {
+        obstacles.push({ x: x, width: itemWidth });
       }
     }
   }
@@ -338,10 +322,10 @@ function getOrCreateRow(r) {
   return rowData;
 }
 
-// --- INPUT HANDLERS ---
+// --- CONTROLS ---
 let touchStartX = 0;
 let touchStartY = 0;
-const MIN_SWIPE_DIST = 25;
+const MIN_SWIPE_DIST = 20;
 
 function movePlayer(dCol, dRow) {
   if (gameOver) return;
@@ -389,8 +373,8 @@ window.addEventListener('touchend', (e) => {
     if (dx > 0) movePlayer(1, 0);
     else movePlayer(-1, 0);
   } else {
-    if (dy < 0) movePlayer(0, 1);  // Swipe up = hop forward
-    else movePlayer(0, -1); // Swipe down = hop back
+    if (dy < 0) movePlayer(0, 1);
+    else movePlayer(0, -1);
   }
 }, { passive: false });
 
@@ -405,24 +389,21 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0);
 });
 
-// --- GAME LOGIC & LOOPS ---
+// --- ENGINE UPDATE & LOOP ---
 function update() {
   if (gameOver) return;
 
-  // Auto-camera creep (slowly forces player forward)
-  autoScrollSpeed = 0.25 + Math.min(score / 2000, 0.5);
+  autoScrollSpeed = 0.25 + Math.min(score / 2000, 0.55);
   cameraY += autoScrollSpeed;
 
-  // Keep camera locked onto player if they advance far ahead
-  const targetCamY = player.worldY - 250;
+  const targetCamY = player.worldY - (canvas.height * 0.45);
   if (targetCamY > cameraY) {
-    cameraY += (targetCamY - cameraY) * 0.1;
+    cameraY += (targetCamY - cameraY) * 0.12;
   }
 
   const playerScreenY = canvas.height - (player.worldY - cameraY) - GRID_SIZE;
 
-  // Check if player falls off the bottom edge of screen
-  if (playerScreenY > canvas.height + 10) {
+  if (playerScreenY > canvas.height + 20) {
     playSplashSound();
     triggerGameOver();
     return;
@@ -431,9 +412,8 @@ function update() {
   const currentRow = getOrCreateRow(player.row);
   let onPlatform = false;
 
-  // Update obstacles for active rows
   const minVisibleRow = Math.floor(cameraY / GRID_SIZE) - 2;
-  const maxVisibleRow = minVisibleRow + 15;
+  const maxVisibleRow = minVisibleRow + Math.ceil(canvas.height / GRID_SIZE) + 3;
 
   for (let r = minVisibleRow; r <= maxVisibleRow; r++) {
     const rowData = getOrCreateRow(r);
@@ -441,11 +421,9 @@ function update() {
       rowData.obstacles.forEach(obs => {
         obs.x += rowData.speed;
 
-        // Wrap around screen bounds
-        if (rowData.speed > 0 && obs.x > canvas.width + 100) obs.x = -obs.width - 50;
-        else if (rowData.speed < 0 && obs.x + obs.width < -100) obs.x = canvas.width + 50;
+        if (rowData.speed > 0 && obs.x > canvas.width + 200) obs.x = -obs.width - 100;
+        else if (rowData.speed < 0 && obs.x + obs.width < -200) obs.x = canvas.width + 100;
 
-        // Collision Check for player's current row
         if (r === player.row) {
           const overlap = player.worldX < obs.x + obs.width && player.worldX + GRID_SIZE > obs.x;
           if (rowData.type === 'WATER' && overlap) {
@@ -461,13 +439,11 @@ function update() {
     }
   }
 
-  // Drown check on water
   if (currentRow.type === 'WATER' && !onPlatform) {
     playSplashSound();
     triggerGameOver();
   }
 
-  // Check left/right screen bounds
   if (player.worldX < 0 || player.worldX + GRID_SIZE > canvas.width) {
     playSplashSound();
     triggerGameOver();
@@ -479,14 +455,8 @@ function triggerGameOver() {
 }
 
 function restartGame() {
-  score = 0;
-  maxRow = 0;
-  cameraY = 0;
-  gameOver = false;
-  isNewHighScore = false;
-  generatedRows.clear();
-  lastChunkType = 'SAFE';
-  currentChunkLength = 5;
+  score = 0; maxRow = 0; cameraY = 0; gameOver = false; isNewHighScore = false;
+  generatedRows.clear(); lastChunkType = 'SAFE'; currentChunkLength = 5;
   player.reset();
 }
 
@@ -494,67 +464,75 @@ function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   const minVisibleRow = Math.max(0, Math.floor(cameraY / GRID_SIZE) - 2);
-  const maxVisibleRow = minVisibleRow + 14;
+  const maxVisibleRow = minVisibleRow + Math.ceil(canvas.height / GRID_SIZE) + 3;
 
-  // 1. Draw Terrain Background Rows
+  // 1. Terrain Rows
   for (let r = minVisibleRow; r <= maxVisibleRow; r++) {
     const rowData = getOrCreateRow(r);
     const screenY = canvas.height - (r * GRID_SIZE - cameraY) - GRID_SIZE;
 
     if (rowData.type === 'SAFE') {
       ctx.fillStyle = (r % 2 === 0) ? '#f1f5f9' : '#e2e8f0';
-      ctx.fillRect(0, screenY, canvas.width, GRID_SIZE);
+      ctx.fillRect(0, screenY, canvas.width, GRID_SIZE + 1);
     } else if (rowData.type === 'WATER') {
       ctx.fillStyle = '#0284c7';
-      ctx.fillRect(0, screenY, canvas.width, GRID_SIZE);
+      ctx.fillRect(0, screenY, canvas.width, GRID_SIZE + 1);
     } else if (rowData.type === 'ROAD') {
       ctx.fillStyle = '#1e293b';
-      ctx.fillRect(0, screenY, canvas.width, GRID_SIZE);
+      ctx.fillRect(0, screenY, canvas.width, GRID_SIZE + 1);
     }
   }
 
-  // 2. Draw Obstacles
+  // 2. High-Detail SVG Obstacles
   for (let r = minVisibleRow; r <= maxVisibleRow; r++) {
     const rowData = getOrCreateRow(r);
     const screenY = canvas.height - (r * GRID_SIZE - cameraY) - GRID_SIZE;
 
     rowData.obstacles.forEach(obs => {
       if (rowData.type === 'WATER') {
-        drawIceFloe(obs.x, screenY, obs.width);
+        ctx.drawImage(iceFloeImg, obs.x, screenY - 4, obs.width, GRID_SIZE + 8);
       } else if (rowData.type === 'ROAD') {
-        drawShip(obs.x, screenY, obs.width, rowData.speed);
+        ctx.save();
+        if (rowData.speed < 0) {
+          ctx.translate(obs.x + obs.width, screenY);
+          ctx.scale(-1, 1);
+          ctx.drawImage(shipImg, 0, -4, obs.width, GRID_SIZE + 8);
+        } else {
+          ctx.drawImage(shipImg, obs.x, screenY - 4, obs.width, GRID_SIZE + 8);
+        }
+        ctx.restore();
       }
     });
   }
 
-  // 3. Draw Player Penguin
+  // 3. Player Penguin
   const playerScreenX = player.worldX;
   const playerScreenY = canvas.height - (player.worldY - cameraY) - GRID_SIZE;
-  drawPenguin(playerScreenX, playerScreenY);
+  ctx.drawImage(penguinImg, playerScreenX, playerScreenY, GRID_SIZE, GRID_SIZE);
 
-  // 4. Update HUD
+  // 4. Update HUD Text
   document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
   document.getElementById('highScoreDisplay').innerText = `BEST: ${highScore}`;
 
-  // 5. Game Over Screen
+  // 5. Game Over Screen Overlay
   if (gameOver) {
     ctx.fillStyle = 'rgba(12, 20, 39, 0.92)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#ef4444';
-    ctx.font = '800 28px system-ui, sans-serif';
+    ctx.font = '800 32px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('GAME OVER', canvas.width / 2, 200);
+    ctx.fillText('GAME OVER', canvas.width / 2, canvas.height * 0.4);
 
     if (isNewHighScore) {
       ctx.fillStyle = '#f59e0b';
-      ctx.font = '700 20px system-ui, sans-serif';
-      ctx.fillText('NEW HIGH SCORE!', canvas.width / 2, 245);
+      ctx.font = '700 22px system-ui, sans-serif';
+      ctx.fillText('NEW HIGH SCORE!', canvas.width / 2, canvas.height * 0.48);
     }
 
     ctx.fillStyle = '#f8fafc';
-    ctx.font = '600 16px system-ui, sans-serif';
-    ctx.fillText(`FINAL SCORE: ${score}`, canvas.width / 2, isNewHighScore ? 280 : 255);
-    ctx.fillText('TAP ANYWHERE TO RESTART', canvas.width / 2, 320);
+    ctx.font = '600 18px system-ui, sans-serif';
+    ctx.fillText(`FINAL SCORE: ${score}`, canvas.width / 2, canvas.height * (isNewHighScore ? 0.54 : 0.48));
+    ctx.fillText('TAP ANYWHERE TO RESTART', canvas.width / 2, canvas.height * 0.62);
   }
 }
 
