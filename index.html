@@ -31,14 +31,15 @@
 
     /* Shop UI */
     #shop { display: none; flex-direction: column; align-items: center; justify-content: center; background: #0f172a; overflow-y: auto; padding: 20px; }
-    .shop-section { width: 300px; margin-bottom: 15px; }
+    .shop-section { width: 310px; margin-bottom: 15px; }
     .shop-section-title { color: #94a3b8; font-size: 13px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
     .shop-card { background: #1e293b; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; border: 2px solid transparent; }
     .shop-card.active { border-color: #38bdf8; }
     .shop-info { color: white; font-weight: bold; font-size: 15px; }
-    .shop-sub { color: #94a3b8; font-size: 11px; font-weight: normal; }
-    .shop-cost { color: #38bdf8; font-size: 13px; font-weight: 800; }
+    .shop-sub { color: #94a3b8; font-size: 11px; font-weight: normal; margin-top: 2px; }
+    .shop-cost { color: #38bdf8; font-size: 13px; font-weight: 800; margin-top: 2px; }
     .shop-btn { width: auto; padding: 8px 16px; font-size: 12px; margin: 0; }
+    .shop-status { color: #10b981; font-size: 12px; font-weight: 800; }
   </style>
 </head>
 <body>
@@ -51,7 +52,7 @@
       FISH VAULT: <span class="fish" id="menuFish">0</span> 🐟
     </div>
     <button onclick="startGame()">Tap to Hop</button>
-    <button class="alt" onclick="openShop()">Shop & Upgrades</button>
+    <button class="alt" onclick="openShop()">Glacier Shop</button>
   </div>
 
   <!-- Shop Menu -->
@@ -60,7 +61,7 @@
     <div class="stats">VAULT: <span class="fish" id="shopFish">0</span> 🐟</div>
     
     <div class="shop-section">
-      <div class="shop-section-title">Power-Up Upgrades</div>
+      <div class="shop-section-title">Unlock Power-Ups</div>
       <div id="powerupList"></div>
     </div>
 
@@ -90,15 +91,16 @@ const KEY_HIGH = 'glacierplay_icehopper_high';
 const KEY_FISH = 'glacierplay_icehopper_fish';
 const KEY_SKINS = 'glacierplay_icehopper_skins';
 const KEY_EQUIP = 'glacierplay_icehopper_equip';
-const KEY_STOCK_SHIELD = 'glacierplay_icehopper_stock_shield';
-const KEY_STOCK_SARDINE = 'glacierplay_icehopper_stock_sardine';
+const KEY_UNLOCK_SHIELD = 'glacierplay_icehopper_unlock_shield';
+const KEY_UNLOCK_SARDINE = 'glacierplay_icehopper_unlock_sardine';
 
 let highScore = parseInt(localStorage.getItem(KEY_HIGH)) || 0;
 let fishCoins = parseInt(localStorage.getItem(KEY_FISH)) || 0;
 let unlockedSkins = JSON.parse(localStorage.getItem(KEY_SKINS)) || ['default'];
 let currentSkin = localStorage.getItem(KEY_EQUIP) || 'default';
-let stockShields = parseInt(localStorage.getItem(KEY_STOCK_SHIELD)) || 0;
-let stockSardines = parseInt(localStorage.getItem(KEY_STOCK_SARDINE)) || 0;
+
+let unlockShield = localStorage.getItem(KEY_UNLOCK_SHIELD) === 'true';
+let unlockSardine = localStorage.getItem(KEY_UNLOCK_SARDINE) === 'true';
 
 const SKINS = [
   { id: 'default', name: 'Classic', cost: 0, color: '#0f172a', beak: '#f97316' },
@@ -111,8 +113,8 @@ function saveProgress() {
   localStorage.setItem(KEY_FISH, fishCoins);
   localStorage.setItem(KEY_SKINS, JSON.stringify(unlockedSkins));
   localStorage.setItem(KEY_EQUIP, currentSkin);
-  localStorage.setItem(KEY_STOCK_SHIELD, stockShields);
-  localStorage.setItem(KEY_STOCK_SARDINE, stockSardines);
+  localStorage.setItem(KEY_UNLOCK_SHIELD, unlockShield);
+  localStorage.setItem(KEY_UNLOCK_SARDINE, unlockSardine);
   document.getElementById('menuBest').innerText = highScore;
   document.getElementById('menuFish').innerText = fishCoins;
 }
@@ -160,9 +162,9 @@ function playSound(type) {
     gain.gain.setValueAtTime(0.2, t); gain.gain.linearRampToValueAtTime(0.01, t + 0.3);
     osc.start(t); osc.stop(t + 0.3); vibrate(80);
   } else if (type === 'orca') {
-    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(80, t); osc.frequency.linearRampToValueAtTime(20, t + 0.4);
-    gain.gain.setValueAtTime(0.3, t); gain.gain.linearRampToValueAtTime(0.01, t + 0.4);
-    osc.start(t); osc.stop(t + 0.4); vibrate([40, 40, 80]);
+    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(90, t); osc.frequency.exponentialRampToValueAtTime(25, t + 0.5);
+    gain.gain.setValueAtTime(0.35, t); gain.gain.linearRampToValueAtTime(0.01, t + 0.5);
+    osc.start(t); osc.stop(t + 0.5); vibrate([50, 50, 100]);
   }
 }
 
@@ -185,9 +187,10 @@ let hasShield = false;
 let invulnerabilityTimer = 0;
 let orcaBiteAnimation = null;
 
-// --- VISUAL ASSETS ---
+// --- HIGH-DETAIL SVG ASSETS ---
 const svgToImg = (svg) => { const img = new Image(); img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg); return img; };
 
+// 1. Ice Floe
 const iceImg = svgToImg(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
   <path d="M14,18 C32,8 168,8 186,18 C194,36 188,68 174,78 C144,88 56,88 26,78 C12,68 6,36 14,18 Z" fill="#e0f2fe"/>
@@ -198,7 +201,37 @@ const iceImg = svgToImg(`
   <path d="M 50,60 L 50,50 M 45,55 L 55,55" stroke="#ffffff" stroke-width="2"/>
 </svg>`);
 
+// 2. Cargo Ship
 const shipImg = svgToImg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100"><path d="M8,48 L282,48 L295,68 C290,82 270,86 250,86 L40,86 C20,86 8,76 8,48 Z" fill="#7f1d1d"/><path d="M4,38 L286,38 L291,50 L8,50 Z" fill="#dc2626"/><rect x="22" y="16" width="46" height="22" fill="#0284c7"/><rect x="74" y="16" width="46" height="22" fill="#eab308"/><rect x="126" y="16" width="46" height="22" fill="#059669"/><rect x="212" y="8" width="36" height="30" rx="3" fill="#f8fafc"/><rect x="216" y="13" width="28" height="9" fill="#38bdf8"/></svg>`);
+
+// 3. High-Detail Orca (Killer Whale)
+const orcaImg = svgToImg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
+  <!-- Water Ripple -->
+  <ellipse cx="100" cy="55" rx="85" ry="22" fill="#0284c7" opacity="0.6"/>
+  <ellipse cx="100" cy="55" rx="65" ry="15" fill="#38bdf8" opacity="0.4"/>
+  
+  <!-- Black Body -->
+  <path d="M 20,55 C 35,25 75,25 125,35 C 165,42 185,50 195,55 C 185,60 155,75 115,75 C 65,75 35,70 20,55 Z" fill="#0f172a"/>
+  
+  <!-- White Belly Patch -->
+  <path d="M 65,65 C 95,75 135,72 165,60 C 145,68 105,68 75,60 Z" fill="#ffffff"/>
+  
+  <!-- White Eye Spot -->
+  <ellipse cx="55" cy="45" rx="14" ry="7" transform="rotate(-10 55 45)" fill="#ffffff"/>
+  <circle cx="44" cy="47" r="2.5" fill="#000000"/>
+  
+  <!-- Tall Dorsal Fin -->
+  <path d="M 100,38 C 110,8 115,2 122,5 C 120,20 126,32 136,37 Z" fill="#0f172a"/>
+  
+  <!-- Pectoral Fin -->
+  <path d="M 75,60 C 65,75 55,80 50,78 C 55,70 65,63 75,60 Z" fill="#0f172a"/>
+  
+  <!-- Blowhole Spray -->
+  <circle cx="75" cy="26" r="3" fill="#ffffff" opacity="0.7"/>
+  <circle cx="72" cy="20" r="2" fill="#ffffff" opacity="0.5"/>
+  <circle cx="78" cy="18" r="2.5" fill="#ffffff" opacity="0.6"/>
+</svg>`);
 
 // --- CLASSES ---
 class Player {
@@ -243,7 +276,6 @@ class Player {
     const cx = this.animX + GRID_SIZE / 2;
     const cy = screenY + GRID_SIZE / 2;
     
-    // Invulnerability Flash Effect
     if (invulnerabilityTimer > 0 && Math.floor(Date.now() / 80) % 2 === 0) return;
 
     if (powerupTimer > 0) {
@@ -315,7 +347,7 @@ class Player {
 const player = new Player();
 const generatedRows = new Map();
 
-// --- MAP GENERATION (Slightly More Frequent Power-ups) ---
+// --- MAP GENERATION (Power-ups only spawn if unlocked) ---
 function getOrCreateRow(r) {
   if (generatedRows.has(r)) return generatedRows.get(r);
 
@@ -331,7 +363,7 @@ function getOrCreateRow(r) {
     if (type !== 'SAFE') {
       const dir = Math.random() < 0.5 ? 1 : -1;
       speed = dir * (1.0 + Math.random() * 1.2) * (1 + diff * 0.6); 
-      const isOrca = type === 'WATER' && diff > 0.5 && Math.random() < 0.2; 
+      const isOrca = type === 'WATER' && diff > 0.4 && Math.random() < 0.25; 
       const width = (Math.floor(Math.random() * 2) + 2) * GRID_SIZE;
       const minGap = width + (GRID_SIZE * 3.5); 
 
@@ -348,12 +380,15 @@ function getOrCreateRow(r) {
       }
     }
 
-    // Increased Power-up & Item Frequency (35% Chance)
-    if (Math.random() < 0.35) {
+    // ITEM SPAWN LOGIC: Drops Fish by default. Powerups ONLY spawn if unlocked!
+    if (Math.random() < 0.3) {
       const ix = Math.floor(Math.random() * COLS) * GRID_SIZE;
-      const roll = Math.random();
-      const itemType = roll < 0.2 ? 'SARDINE' : (roll < 0.4 ? 'SHIELD' : 'FISH');
-      items.push({ x: ix, type: itemType, collected: false });
+      const allowedItems = ['FISH'];
+      if (unlockShield) allowedItems.push('SHIELD');
+      if (unlockSardine) allowedItems.push('SARDINE');
+
+      const chosenType = allowedItems[Math.floor(Math.random() * allowedItems.length)];
+      items.push({ x: ix, type: chosenType, collected: false });
     }
   }
 
@@ -390,14 +425,7 @@ function startGame() {
   document.getElementById('gameHud').style.opacity = 1;
   gameState = 'PLAY'; score = 0; maxRow = 2; cameraY = 0; powerupTimer = 0; 
   invulnerabilityTimer = 0; orcaBiteAnimation = null;
-  
-  // Consume Equipped Shop Power-Ups
-  hasShield = stockShields > 0;
-  if (hasShield) { stockShields--; saveProgress(); }
-
-  if (stockSardines > 0) {
-    stockSardines--; powerupTimer = 5; saveProgress();
-  }
+  hasShield = false;
 
   generatedRows.clear(); player.reset();
   updateHUD();
@@ -419,27 +447,33 @@ function renderShop() {
   // Power-Ups Shop
   const powerupList = document.getElementById('powerupList'); powerupList.innerHTML = '';
   
+  // Shield Unlock Card
   const shieldCard = document.createElement('div');
   shieldCard.className = 'shop-card';
   shieldCard.innerHTML = `
     <div>
       <div class="shop-info">🛡️ Glacier Shield</div>
-      <div class="shop-sub">Blocks 1 fatal collision or water drowning</div>
-      <div class="shop-cost">🐟 30 (Stock: ${stockShields})</div>
+      <div class="shop-sub">${unlockShield ? 'Unlocked! Spawns on map.' : 'Unlock to spawn Shields on map & block hits.'}</div>
+      ${!unlockShield ? '<div class="shop-cost">🐟 60</div>' : ''}
     </div>
-    <button class="shop-btn" onclick="buyPowerup('shield')">Buy</button>
+    ${unlockShield 
+      ? '<div class="shop-status">UNLOCKED ✓</div>' 
+      : `<button class="shop-btn" onclick="unlockPowerup('shield')">Unlock</button>`}
   `;
   powerupList.appendChild(shieldCard);
 
+  // Sardine Unlock Card
   const sardineCard = document.createElement('div');
   sardineCard.className = 'shop-card';
   sardineCard.innerHTML = `
     <div>
       <div class="shop-info">🌟 Golden Sardine</div>
-      <div class="shop-sub">Start with 5s Invincibility & Water Walk</div>
-      <div class="shop-cost">🐟 50 (Stock: ${stockSardines})</div>
+      <div class="shop-sub">${unlockSardine ? 'Unlocked! Spawns on map.' : 'Unlock for 5s Invincibility & Water Walk.'}</div>
+      ${!unlockSardine ? '<div class="shop-cost">🐟 100</div>' : ''}
     </div>
-    <button class="shop-btn" onclick="buyPowerup('sardine')">Buy</button>
+    ${unlockSardine 
+      ? '<div class="shop-status">UNLOCKED ✓</div>' 
+      : `<button class="shop-btn" onclick="unlockPowerup('sardine')">Unlock</button>`}
   `;
   powerupList.appendChild(sardineCard);
 
@@ -451,18 +485,18 @@ function renderShop() {
     const div = document.createElement('div');
     div.className = `shop-card ${isEquipped ? 'active' : ''}`;
     div.innerHTML = `
-      <div><div class="shop-info">${s.name}</div>${!isUnlocked ? `<div class="shop-cost">🐟 ${s.cost}</div>` : ''}</div>
+      <div><div class="skin-info">${s.name}</div>${!isUnlocked ? `<div class="skin-cost">🐟 ${s.cost}</div>` : ''}</div>
       <button class="shop-btn ${isEquipped ? 'alt' : ''}" onclick="buySkin('${s.id}')">${isEquipped ? 'Equipped' : (isUnlocked ? 'Equip' : 'Buy')}</button>
     `;
     list.appendChild(div);
   });
 }
 
-function buyPowerup(type) {
-  if (type === 'shield' && fishCoins >= 30) {
-    fishCoins -= 30; stockShields++; playSound('powerup');
-  } else if (type === 'sardine' && fishCoins >= 50) {
-    fishCoins -= 50; stockSardines++; playSound('powerup');
+function unlockPowerup(type) {
+  if (type === 'shield' && !unlockShield && fishCoins >= 60) {
+    fishCoins -= 60; unlockShield = true; playSound('powerup');
+  } else if (type === 'sardine' && !unlockSardine && fishCoins >= 100) {
+    fishCoins -= 100; unlockSardine = true; playSound('powerup');
   } else {
     vibrate([50, 50, 50]); return;
   }
@@ -491,8 +525,8 @@ function updateHUD() {
 
 function triggerShieldBreak(obs, screenY) {
   hasShield = false;
-  invulnerabilityTimer = 1.5; // Grace period
-  if (obs) obs.x = -2000; // Destroy obstacle
+  invulnerabilityTimer = 1.5;
+  if (obs) obs.x = -2000;
   playSound('powerup');
   spawnParticles(player.animX + GRID_SIZE/2, screenY + GRID_SIZE/2, '#7dd3fc', 20);
   updateHUD();
@@ -502,7 +536,7 @@ function triggerOrcaEaten(screenY) {
   orcaBiteAnimation = { x: player.animX, y: screenY, progress: 0 };
   playSound('orca');
   spawnParticles(player.animX + GRID_SIZE/2, screenY + GRID_SIZE/2, '#0f172a', 15);
-  spawnParticles(player.animX + GRID_SIZE/2, screenY + GRID_SIZE/2, '#ef4444', 10);
+  spawnParticles(player.animX + GRID_SIZE/2, screenY + GRID_SIZE/2, '#ef4444', 12);
   triggerGameOver();
 }
 
@@ -601,7 +635,6 @@ function loop(time) {
       }
     }
 
-    // Water Walk / Drowning Check
     if (powerupTimer > 0 && curRow.type === 'WATER') onPlatform = true;
 
     if (curRow.type === 'WATER' && !onPlatform && player.hopT === 1 && invulnerabilityTimer <= 0) { 
@@ -653,8 +686,15 @@ function loop(time) {
     row.obstacles.forEach(obs => {
       if (row.type === 'WATER') {
         if (obs.isOrca) {
-          ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.ellipse(obs.x + obs.width/2, sy + GRID_SIZE/2, obs.width/2, 10, 0, 0, Math.PI*2); ctx.fill();
-          ctx.beginPath(); ctx.moveTo(obs.x + obs.width/2, sy + GRID_SIZE/2); ctx.lineTo(obs.x + obs.width/2 - (row.speed>0?15:-15), sy - 15); ctx.lineTo(obs.x + obs.width/2 + (row.speed>0?10:-10), sy + GRID_SIZE/2); ctx.fill();
+          ctx.save();
+          if (row.speed < 0) {
+            ctx.translate(obs.x + obs.width, sy);
+            ctx.scale(-1, 1);
+            ctx.drawImage(orcaImg, 0, -4, obs.width, GRID_SIZE + 8);
+          } else {
+            ctx.drawImage(orcaImg, obs.x, sy - 4, obs.width, GRID_SIZE + 8);
+          }
+          ctx.restore();
         } else {
           ctx.globalAlpha = obs.isMelting ? Math.max(0, 1 - (obs.meltTimer/2.2)) : 1;
           if (obs.isMelting && Math.random()<0.2) ctx.translate((Math.random()-0.5)*4, 0); 
@@ -683,20 +723,40 @@ function loop(time) {
 
   player.draw(ctx, canvas.height - (player.animY - cameraY) - GRID_SIZE);
 
-  // Render Orca Bite Animation
+  // High-Detail Orca Bite Death Animation
   if (orcaBiteAnimation) {
-    orcaBiteAnimation.progress += dt * 3;
+    orcaBiteAnimation.progress += dt * 2.8;
     const ox = orcaBiteAnimation.x + GRID_SIZE / 2;
     const oy = orcaBiteAnimation.y + GRID_SIZE / 2;
-    const biteSize = Math.sin(Math.min(1, orcaBiteAnimation.progress) * Math.PI) * (GRID_SIZE * 0.9);
+    const p = Math.min(1, orcaBiteAnimation.progress);
+    const biteHeight = Math.sin(p * Math.PI) * (GRID_SIZE * 1.3);
 
     ctx.save();
     ctx.translate(ox, oy);
+
+    // Water Splash Ring
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.beginPath(); ctx.ellipse(0, 10, biteHeight * 1.2, biteHeight * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+
+    // Orca Head Snapping Up
     ctx.fillStyle = '#0f172a';
-    ctx.beginPath(); ctx.ellipse(0, 0, biteSize, biteSize * 0.7, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, -biteHeight * 0.3, biteHeight * 0.8, biteHeight * 0.9, 0, 0, Math.PI * 2); ctx.fill();
+    
+    // Eye Spot
     ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.ellipse(-biteSize*0.4, -biteSize*0.2, biteSize*0.2, biteSize*0.1, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(biteSize*0.4, -biteSize*0.2, biteSize*0.2, biteSize*0.1, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(-biteHeight * 0.4, -biteHeight * 0.5, biteHeight * 0.2, biteHeight * 0.1, 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(biteHeight * 0.4, -biteHeight * 0.5, biteHeight * 0.2, biteHeight * 0.1, -0.2, 0, Math.PI * 2); ctx.fill();
+
+    // Sharp Teeth
+    ctx.fillStyle = '#ffffff';
+    for (let i = -3; i <= 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * 8, -biteHeight * 0.1);
+      ctx.lineTo(i * 8 + 4, biteHeight * 0.2);
+      ctx.lineTo(i * 8 - 4, biteHeight * 0.2);
+      ctx.fill();
+    }
+
     ctx.restore();
   }
   
