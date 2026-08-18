@@ -160,10 +160,9 @@ let particles = [];
 let powerupTimer = 0;
 let hasShield = false;
 
-// --- VISUAL ASSETS (SVG Data URIs) ---
+// --- VISUAL ASSETS ---
 const svgToImg = (svg) => { const img = new Image(); img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg); return img; };
 
-// Slippery Ice Floe Asset
 const iceImg = svgToImg(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
   <path d="M14,18 C32,8 168,8 186,18 C194,36 188,68 174,78 C144,88 56,88 26,78 C12,68 6,36 14,18 Z" fill="#e0f2fe"/>
@@ -287,33 +286,43 @@ class Player {
 const player = new Player();
 const generatedRows = new Map();
 
+// --- MAP GENERATION (Easier & Balanced Spacing) ---
 function getOrCreateRow(r) {
   if (generatedRows.has(r)) return generatedRows.get(r);
 
-  const diff = Math.min(1, maxRow / 100); 
+  const diff = Math.min(1, maxRow / 120); // Slower scaling over 120 rows
   let type = 'SAFE', speed = 0, obstacles = [], items = [];
 
   if (r > 3) {
     const rand = Math.random();
-    if (r < 10) type = rand < 0.6 ? 'ROAD' : 'SAFE'; 
-    else if (r < 30) type = rand < 0.4 ? 'ROAD' : (rand < 0.8 ? 'WATER' : 'SAFE'); 
-    else type = rand < 0.4 ? 'ROAD' : (rand < 0.85 ? 'WATER' : 'SAFE'); 
+    if (r < 10) type = rand < 0.5 ? 'ROAD' : 'SAFE'; 
+    else if (r < 30) type = rand < 0.35 ? 'ROAD' : (rand < 0.7 ? 'WATER' : 'SAFE'); 
+    else type = rand < 0.35 ? 'ROAD' : (rand < 0.75 ? 'WATER' : 'SAFE'); 
 
     if (type !== 'SAFE') {
       const dir = Math.random() < 0.5 ? 1 : -1;
-      speed = dir * (1.5 + Math.random() * 2) * (1 + diff);
-      const isOrca = type === 'WATER' && diff > 0.4 && Math.random() < 0.3; 
+      speed = dir * (1.0 + Math.random() * 1.2) * (1 + diff * 0.6); // Slower base speeds
+      const isOrca = type === 'WATER' && diff > 0.5 && Math.random() < 0.2; 
       const width = (Math.floor(Math.random() * 2) + 2) * GRID_SIZE;
-      const spacing = width + (GRID_SIZE * 2.5) + Math.random() * (GRID_SIZE * 2) * (1 - diff*0.5);
+      const minGap = width + (GRID_SIZE * 3.5); // Wider guaranteed gap
 
-      for (let x = -300; x < canvas.width + 400; x += spacing) {
-        obstacles.push({ x, width, isMelting: type === 'WATER' && !isOrca && diff > 0.3 && Math.random() < 0.3, meltTimer: 0, isOrca });
+      // Generate initial well-spaced obstacles
+      let currentX = -100;
+      while (currentX < canvas.width + 400) {
+        obstacles.push({ 
+          x: currentX, 
+          width: width, 
+          isMelting: type === 'WATER' && !isOrca && diff > 0.3 && Math.random() < 0.25, 
+          meltTimer: 0, 
+          isOrca 
+        });
+        currentX += minGap + Math.random() * (GRID_SIZE * 2.5);
       }
     }
 
-    if (Math.random() < 0.15) {
+    if (Math.random() < 0.2) { // Higher item drop rate
       const ix = Math.floor(Math.random() * COLS) * GRID_SIZE;
-      const itemType = Math.random() < 0.05 ? 'SARDINE' : (Math.random() < 0.1 ? 'SHIELD' : 'FISH');
+      const itemType = Math.random() < 0.08 ? 'SARDINE' : (Math.random() < 0.15 ? 'SHIELD' : 'FISH');
       items.push({ x: ix, type: itemType, collected: false });
     }
   }
@@ -403,13 +412,14 @@ function loop(time) {
   if (gameState === 'PLAY') {
     player.update(dt);
     
-    autoScrollSpeed = 0.25 + Math.min(score / 2000, 0.6);
+    // Easier Slower Scroll Speed
+    autoScrollSpeed = 0.15 + Math.min(score / 3000, 0.4);
     cameraY += autoScrollSpeed;
-    const targetCam = player.animY - canvas.height * 0.4;
+    const targetCam = player.animY - canvas.height * 0.45;
     if (targetCam > cameraY) cameraY += (targetCam - cameraY) * 0.1;
 
     const screenY = canvas.height - (player.animY - cameraY) - GRID_SIZE;
-    if (screenY > canvas.height + 20) { playSound('splash'); spawnParticles(player.animX, canvas.height, '#38bdf8', 20); triggerGameOver(); }
+    if (screenY > canvas.height + 25) { playSound('splash'); spawnParticles(player.animX, canvas.height, '#38bdf8', 20); triggerGameOver(); }
 
     if (powerupTimer > 0) {
       powerupTimer -= dt;
@@ -435,12 +445,34 @@ function loop(time) {
         }
       });
 
-      if (row.speed !== 0) {
+      // NON-OVERLAPPING OBSTACLE WRAPPER LOGIC
+      if (row.speed !== 0 && row.obstacles.length > 0) {
         row.obstacles.forEach(obs => {
           obs.x += row.speed;
-          if (row.speed > 0 && obs.x > canvas.width + 200) obs.x = -obs.width - 100;
-          else if (row.speed < 0 && obs.x + obs.width < -200) obs.x = canvas.width + 100;
+        });
 
+        const minGap = GRID_SIZE * 3.5;
+
+        if (row.speed > 0) { // Moving Right
+          row.obstacles.forEach(obs => {
+            if (obs.x > canvas.width + 150) {
+              let minX = Math.min(...row.obstacles.map(o => o.x));
+              obs.x = Math.min(-obs.width - 50, minX - minGap);
+              obs.meltTimer = 0; // Reset melting if wrapped
+            }
+          });
+        } else { // Moving Left
+          row.obstacles.forEach(obs => {
+            if (obs.x + obs.width < -150) {
+              let maxX = Math.max(...row.obstacles.map(o => o.x + o.width));
+              obs.x = Math.max(canvas.width + 50, maxX + minGap);
+              obs.meltTimer = 0; // Reset melting if wrapped
+            }
+          });
+        }
+
+        // Collision Check
+        row.obstacles.forEach(obs => {
           if (r === player.row) {
             const overlap = player.animX < obs.x + obs.width - 10 && player.animX + GRID_SIZE > obs.x + 10;
             if (row.type === 'WATER' && overlap) {
@@ -459,7 +491,7 @@ function loop(time) {
               else { playSound('crash'); spawnParticles(player.animX, screenY, '#ef4444', 20); triggerGameOver(); }
             }
           }
-          if (obs.isMelting && obs.meltTimer > 1.5) obs.x = -1000; 
+          if (obs.isMelting && obs.meltTimer > 2.2) obs.x = -1000; // Slower melt time (2.2s)
         });
       }
     }
@@ -468,6 +500,7 @@ function loop(time) {
     if (player.animX < -GRID_SIZE/2 || player.animX > canvas.width - GRID_SIZE/2) { playSound('splash'); triggerGameOver(); }
   }
 
+  // --- RENDER VISUAL HIERARCHY ---
   const cycle = (maxRow / 100) % 1;
   let bgGrad = ctx.createLinearGradient(0,0,0,canvas.height);
   if (cycle < 0.3) { bgGrad.addColorStop(0, '#38bdf8'); bgGrad.addColorStop(1, '#e0f2fe'); }
@@ -483,11 +516,26 @@ function loop(time) {
     const row = getOrCreateRow(r);
     const sy = canvas.height - (r * GRID_SIZE - cameraY) - GRID_SIZE;
     
+    // VISUAL GROUND TYPES
     if (row.type === 'SAFE') { 
         ctx.fillStyle = (r%2===0)?'#f1f5f9':'#e2e8f0'; 
         ctx.fillRect(0, sy, canvas.width, GRID_SIZE+1); 
     }
-    else if (row.type === 'WATER' || row.type === 'ROAD') { 
+    else if (row.type === 'ROAD') { 
+        // SHALLOW SHIPPING CHANNEL (Light Aqua + Navigation Channel Line)
+        ctx.fillStyle = '#38bdf8'; 
+        ctx.fillRect(0, sy, canvas.width, GRID_SIZE+1); 
+        ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+        ctx.setLineDash([12, 12]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, sy + GRID_SIZE/2);
+        ctx.lineTo(canvas.width, sy + GRID_SIZE/2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+    else if (row.type === 'WATER') { 
+        // DEEP ARCTIC OCEAN (Deep Blue)
         ctx.fillStyle = '#0284c7'; 
         ctx.fillRect(0, sy, canvas.width, GRID_SIZE+1); 
     }
@@ -506,14 +554,13 @@ function loop(time) {
           ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.ellipse(obs.x + obs.width/2, sy + GRID_SIZE/2, obs.width/2, 10, 0, 0, Math.PI*2); ctx.fill();
           ctx.beginPath(); ctx.moveTo(obs.x + obs.width/2, sy + GRID_SIZE/2); ctx.lineTo(obs.x + obs.width/2 - (row.speed>0?15:-15), sy - 15); ctx.lineTo(obs.x + obs.width/2 + (row.speed>0?10:-10), sy + GRID_SIZE/2); ctx.fill();
         } else {
-          ctx.globalAlpha = obs.isMelting ? Math.max(0, 1 - (obs.meltTimer/1.5)) : 1;
+          ctx.globalAlpha = obs.isMelting ? Math.max(0, 1 - (obs.meltTimer/2.2)) : 1;
           if (obs.isMelting && Math.random()<0.2) ctx.translate((Math.random()-0.5)*4, 0); 
           ctx.drawImage(iceImg, obs.x, sy, obs.width, GRID_SIZE);
           ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1;
         }
       } else if (row.type === 'ROAD') {
-        
-        // SIMPLE CLEAN WAKE: Trailing wedge directly behind stern
+        // Trailing Wedge Wake
         ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
         ctx.beginPath();
         if (row.speed > 0) {
@@ -530,7 +577,6 @@ function loop(time) {
         ctx.closePath();
         ctx.fill();
 
-        // Draw Ship
         ctx.save();
         if (row.speed < 0) { ctx.translate(obs.x + obs.width, sy); ctx.scale(-1, 1); ctx.drawImage(shipImg, 0, -4, obs.width, GRID_SIZE + 8); }
         else { ctx.drawImage(shipImg, obs.x, sy - 4, obs.width, GRID_SIZE + 8); }
