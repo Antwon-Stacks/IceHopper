@@ -247,47 +247,36 @@ const iceImg = svgToImg(`
 
 const shipImg = svgToImg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100"><path d="M8,48 L282,48 L295,68 C290,82 270,86 250,86 L40,86 C20,86 8,76 8,48 Z" fill="#7f1d1d"/><path d="M4,38 L286,38 L291,50 L8,50 Z" fill="#dc2626"/><rect x="22" y="16" width="46" height="22" fill="#0284c7"/><rect x="74" y="16" width="46" height="22" fill="#eab308"/><rect x="126" y="16" width="46" height="22" fill="#059669"/><rect x="212" y="8" width="36" height="30" rx="3" fill="#f8fafc"/><rect x="216" y="13" width="28" height="9" fill="#38bdf8"/></svg>`);
 
-// BULKY STOCKY SWIMMING ORCA (LANE OBSTACLE)
+// HIGH-DETAIL RIDEABLE SWIMMING ORCA (MATCHED ARTWORK STYLE)
 const orcaImg = svgToImg(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 100">
   <defs>
-    <linearGradient id="bodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#1e293b"/>
-      <stop offset="35%" stop-color="#0f172a"/>
+    <linearGradient id="orcaBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="40%" stop-color="#0f172a"/>
       <stop offset="100%" stop-color="#020617"/>
-    </linearGradient>
-    <linearGradient id="mistGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#e0f2fe" stop-opacity="0"/>
     </linearGradient>
   </defs>
   <ellipse cx="120" cy="58" rx="100" ry="24" fill="#0284c7" opacity="0.4"/>
   <ellipse cx="120" cy="58" rx="80" ry="16" fill="#38bdf8" opacity="0.3"/>
-  <path d="M 20,58 Q 50,48 100,58 Q 150,68 220,58" stroke="#ffffff" stroke-width="3" fill="none" opacity="0.5"/>
   
-  <!-- Thick, Heavy Body (Blunt Rounded Head) -->
-  <path d="M 10,52 C 15,20 70,14 140,26 C 185,35 215,48 230,52 C 215,64 175,84 120,84 C 60,84 20,76 10,52 Z" fill="url(#bodyGrad)"/>
+  <!-- Sleek Heavy Torso Body -->
+  <path d="M 12,52 C 22,22 75,15 145,28 C 180,35 210,48 228,52 C 210,64 175,82 120,82 C 60,82 22,74 12,52 Z" fill="url(#orcaBodyGrad)"/>
   
-  <!-- Massive White Underbelly -->
-  <path d="M 18,54 C 35,66 70,80 120,80 C 165,80 200,68 215,56 C 190,70 145,75 105,75 C 60,75 30,68 18,54 Z" fill="#ffffff"/>
+  <!-- White Underbelly Line -->
+  <path d="M 18,55 C 35,66 70,78 120,78 C 165,78 200,66 215,56 C 190,68 145,73 105,73 C 60,73 30,66 18,55 Z" fill="#ffffff"/>
   
   <!-- Grey Saddle Patch -->
-  <path d="M 130,30 C 142,32 158,38 162,48 C 152,52 138,48 124,42 C 122,36 125,32 130,30 Z" fill="#94a3b8" opacity="0.85"/>
+  <path d="M 130,32 C 142,34 156,42 152,52 C 140,50 128,42 122,36 Z" fill="#94a3b8" opacity="0.85"/>
   
-  <!-- White Eye Oval -->
-  <ellipse cx="50" cy="42" rx="18" ry="9" transform="rotate(-10 50 42)" fill="#ffffff"/>
-  <circle cx="36" cy="46" r="2.5" fill="#000000"/>
+  <!-- White Eye Patch -->
+  <ellipse cx="48" cy="42" rx="16" ry="8" transform="rotate(-15 48 42)" fill="#ffffff"/>
   
-  <!-- Thick Dorsal Fin -->
-  <path d="M 105,34 C 115,2 122,-4 132,0 C 128,18 132,30 148,34 Z" fill="#0f172a"/>
+  <!-- Broad Dorsal Fin -->
+  <path d="M 105,32 C 115,2 122,-10 128,-6 C 126,12 128,28 142,38 Z" fill="#0f172a"/>
   
-  <!-- Paddle Flipper -->
-  <path d="M 75,66 C 60,88 45,92 40,88 C 48,78 62,68 75,66 Z" fill="#0f172a"/>
-  
-  <!-- Blowhole Mist Spray -->
-  <path d="M 80,24 L 70,2 L 92,2 Z" fill="url(#mistGrad)"/>
-  <circle cx="78" cy="14" r="5" fill="#ffffff" opacity="0.6"/>
-  <circle cx="86" cy="8" r="3.5" fill="#ffffff" opacity="0.5"/>
+  <!-- Paddle Pectoral Fin -->
+  <path d="M 75,66 C 62,88 48,94 42,88 C 48,78 62,68 75,66 Z" fill="#0f172a"/>
 </svg>`);
 
 // HEAVY BREACHING APEX ORCA (DEATH ANIMATION)
@@ -301,29 +290,21 @@ const orcaBreachImg = svgToImg(`
     </linearGradient>
   </defs>
   
-  <!-- Massive Tail Flukes -->
   <path d="M 175,130 C 198,142 215,152 212,160 C 195,158 180,144 165,135 Z" fill="#0f172a"/>
   <path d="M 175,130 C 192,112 208,102 215,108 C 202,120 188,126 165,135 Z" fill="#0f172a"/>
 
-  <!-- Thick Heavy Arched Torso -->
   <path d="M 25,80 C 35,35 90,15 150,55 C 175,72 185,105 175,132 C 155,105 125,72 80,72 C 45,72 25,80 25,80 Z" fill="url(#bBodyGrad)"/>
 
-  <!-- White Underbelly Patch -->
   <path d="M 28,90 C 45,102 85,110 135,102 C 162,96 175,130 175,132 C 150,98 110,90 70,90 C 45,90 28,90 28,90 Z" fill="#ffffff"/>
 
-  <!-- Saddle Patch -->
   <path d="M 120,46 C 134,50 146,64 142,75 C 130,72 120,62 114,54 Z" fill="#94a3b8" opacity="0.85"/>
 
-  <!-- Broad Dorsal Fin -->
   <path d="M 105,32 C 115,0 125,-12 132,-8 C 130,12 132,30 145,42 Z" fill="#0f172a"/>
 
-  <!-- Large Paddle Pectoral Fin -->
   <path d="M 90,80 C 82,108 72,125 64,120 C 68,102 78,88 90,80 Z" fill="#0f172a"/>
 
-  <!-- Distinct White Eye Patch -->
   <ellipse cx="42" cy="58" rx="14" ry="7" transform="rotate(-20 42 58)" fill="#ffffff"/>
 
-  <!-- Massive Open Jaw Cavity & Teeth -->
   <path d="M 5,82 C 18,68 38,72 45,78 L 22,88 Z" fill="#0f172a"/>
   <path d="M 12,98 C 24,104 40,94 45,88 L 22,88 Z" fill="#ffffff"/>
   <path d="M 14,84 C 24,78 36,82 42,85 C 38,90 26,92 14,84 Z" fill="#991b1b"/>
@@ -395,94 +376,46 @@ class Player {
       ctx.scale(1 - arc * 0.15, 1 + arc * 0.2);
     }
 
-    // --- CHARACTER SKINS DRAWING ---
+    // --- CHARACTER SKINS ---
     if (skin.id === 'seal') {
-      // --- HARBOR SEAL ---
       ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(0, 16, 16, 5, 0, 0, Math.PI*2); ctx.fill();
-      
-      // Side Flippers
       ctx.fillStyle = '#475569';
       ctx.beginPath(); ctx.ellipse(-15, 6, 6, 12, 0.6, 0, Math.PI*2); ctx.fill();
       ctx.beginPath(); ctx.ellipse(15, 6, 6, 12, -0.6, 0, Math.PI*2); ctx.fill();
 
-      // Main Grey Body
-      ctx.fillStyle = '#64748b';
-      ctx.beginPath(); ctx.ellipse(0, 2, 16, 18, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#64748b'; ctx.beginPath(); ctx.ellipse(0, 2, 16, 18, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#cbd5e1'; ctx.beginPath(); ctx.ellipse(0, 5, 11, 12, 0, 0, Math.PI*2); ctx.fill();
 
-      // Lighter Belly
-      ctx.fillStyle = '#cbd5e1';
-      ctx.beginPath(); ctx.ellipse(0, 5, 11, 12, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.arc(-6, 2, 1.5, 0, Math.PI*2); ctx.arc(7, 8, 2, 0, Math.PI*2); ctx.arc(-8, 10, 1.5, 0, Math.PI*2); ctx.fill();
 
-      // Seal Coat Spots
-      ctx.fillStyle = '#334155';
-      ctx.beginPath(); ctx.arc(-6, 2, 1.5, 0, Math.PI*2); ctx.arc(7, 8, 2, 0, Math.PI*2); ctx.arc(-8, 10, 1.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#f1f5f9'; ctx.beginPath(); ctx.ellipse(-4, -2, 5, 4, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(4, -2, 5, 4, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.ellipse(0, -4, 4, 2.5, 0, 0, Math.PI*2); ctx.fill();
 
-      // Muzzle / Whisker Pads
-      ctx.fillStyle = '#f1f5f9';
-      ctx.beginPath(); ctx.ellipse(-4, -2, 5, 4, 0, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(4, -2, 5, 4, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(-6, -8, 3.5, 0, Math.PI*2); ctx.arc(6, -8, 3.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(-7, -9, 1.2, 0, Math.PI*2); ctx.arc(5, -9, 1.2, 0, Math.PI*2); ctx.fill();
 
-      // Nose
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.ellipse(0, -4, 4, 2.5, 0, 0, Math.PI*2); ctx.fill();
-
-      // Big Cute Seal Eyes
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.arc(-6, -8, 3.5, 0, Math.PI*2); ctx.arc(6, -8, 3.5, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.arc(-7, -9, 1.2, 0, Math.PI*2); ctx.arc(5, -9, 1.2, 0, Math.PI*2); ctx.fill();
-
-      // Whiskers
       ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(-5, -2); ctx.lineTo(-14, -4);
-      ctx.moveTo(-5, 0); ctx.lineTo(-13, 2);
-      ctx.moveTo(5, -2); ctx.lineTo(14, -4);
-      ctx.moveTo(5, 0); ctx.lineTo(13, 2);
-      ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-5, -2); ctx.lineTo(-14, -4); ctx.moveTo(-5, 0); ctx.lineTo(-13, 2); ctx.moveTo(5, -2); ctx.lineTo(14, -4); ctx.moveTo(5, 0); ctx.lineTo(13, 2); ctx.stroke();
 
     } else if (skin.id === 'puffin') {
-      // --- ATLANTIC PUFFIN ---
       ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(0, 16, 14, 4, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.ellipse(-8, 15, 6, 3, -0.3, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(8, 15, 6, 3, 0.3, 0, Math.PI*2); ctx.fill();
 
-      // Orange Webbed Feet
-      ctx.fillStyle = '#f97316';
-      ctx.beginPath(); ctx.ellipse(-8, 15, 6, 3, -0.3, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(8, 15, 6, 3, 0.3, 0, Math.PI*2); ctx.fill();
-
-      // Wings & Body
       ctx.fillStyle = '#0f172a';
       ctx.beginPath(); ctx.ellipse(-14, 2, 4, 10, 0.5, 0, Math.PI*2); ctx.fill();
       ctx.beginPath(); ctx.ellipse(14, 2, 4, 10, -0.5, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(0, -16);
-      ctx.bezierCurveTo(-14, -16, -18, -2, -15, 10);
-      ctx.bezierCurveTo(-8, 18, 8, 18, 15, 10);
-      ctx.bezierCurveTo(18, -2, 14, -16, 0, -16);
-      ctx.fill();
+      ctx.beginPath(); ctx.moveTo(0, -16); ctx.bezierCurveTo(-14, -16, -18, -2, -15, 10); ctx.bezierCurveTo(-8, 18, 8, 18, 15, 10); ctx.bezierCurveTo(18, -2, 14, -16, 0, -16); ctx.fill();
 
-      // Distinct White Face Mask
-      ctx.fillStyle = '#f8fafc';
-      ctx.beginPath(); ctx.ellipse(-6, -5, 7, 7, 0, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(6, -5, 7, 7, 0, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(0, 6, 10, 8, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.ellipse(-6, -5, 7, 7, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(6, -5, 7, 7, 0, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(0, 6, 10, 8, 0, 0, Math.PI*2); ctx.fill();
 
-      // Red Eye Ring & Dark Eye
-      ctx.fillStyle = '#ef4444';
-      ctx.beginPath(); ctx.arc(-5, -6, 3.5, 0, Math.PI*2); ctx.arc(5, -6, 3.5, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.arc(-5, -6, 2, 0, Math.PI*2); ctx.arc(5, -6, 2, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(-5, -6, 3.5, 0, Math.PI*2); ctx.arc(5, -6, 3.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(-5, -6, 2, 0, Math.PI*2); ctx.arc(5, -6, 2, 0, Math.PI*2); ctx.fill();
 
-      // LARGE STRIPED PUFFIN BEAK
-      ctx.fillStyle = '#f59e0b'; // Yellow base
-      ctx.beginPath(); ctx.moveTo(-7, -2); ctx.lineTo(7, -2); ctx.lineTo(0, 10); ctx.fill();
-      ctx.fillStyle = '#ef4444'; // Red tip
-      ctx.beginPath(); ctx.moveTo(-5, 2); ctx.lineTo(5, 2); ctx.lineTo(0, 10); ctx.fill();
-      ctx.fillStyle = '#0284c7'; // Blue stripe accent
-      ctx.fillRect(-5, -2, 10, 2);
+      ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.moveTo(-7, -2); ctx.lineTo(7, -2); ctx.lineTo(0, 10); ctx.fill();
+      ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.moveTo(-5, 2); ctx.lineTo(5, 2); ctx.lineTo(0, 10); ctx.fill();
+      ctx.fillStyle = '#0284c7'; ctx.fillRect(-5, -2, 10, 2);
 
     } else {
-      // --- CLASSIC PENGUIN ---
       ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(0, 16, 14, 4, 0, 0, Math.PI*2); ctx.fill();
       
       ctx.fillStyle = '#0f172a';
@@ -494,25 +427,14 @@ class Player {
       ctx.beginPath(); ctx.ellipse(8, 14, 5, 3, 0.2, 0, Math.PI*2); ctx.fill();
 
       ctx.fillStyle = '#0f172a';
-      ctx.beginPath();
-      ctx.moveTo(0, -16);
-      ctx.bezierCurveTo(-14, -16, -18, -2, -15, 10);
-      ctx.bezierCurveTo(-8, 18, 8, 18, 15, 10);
-      ctx.bezierCurveTo(18, -2, 14, -16, 0, -16);
-      ctx.fill();
+      ctx.beginPath(); ctx.moveTo(0, -16); ctx.bezierCurveTo(-14, -16, -18, -2, -15, 10); ctx.bezierCurveTo(-8, 18, 8, 18, 15, 10); ctx.bezierCurveTo(18, -2, 14, -16, 0, -16); ctx.fill();
 
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.arc(-5, -6, 6, 0, Math.PI*2); ctx.arc(5, -6, 6, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(0, 6, 11, 8, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(-5, -6, 6, 0, Math.PI*2); ctx.arc(5, -6, 6, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.ellipse(0, 6, 11, 8, 0, 0, Math.PI*2); ctx.fill();
 
       ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.moveTo(-5, -2); ctx.lineTo(5, -2); ctx.lineTo(0, 4); ctx.fill();
 
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath(); ctx.arc(-5, -6, 2, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(5, -6, 2, 0, Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath(); ctx.arc(-6, -7, 0.8, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.arc(4, -7, 0.8, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0f172a'; ctx.beginPath(); ctx.arc(-5, -6, 2, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(5, -6, 2, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(-6, -7, 0.8, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(4, -7, 0.8, 0, Math.PI*2); ctx.fill();
     }
     ctx.restore();
   }
@@ -547,13 +469,15 @@ function getOrCreateRow(r) {
           width: width, 
           isMelting: type === 'WATER' && !isOrca && diff > 0.3 && Math.random() < 0.25, 
           meltTimer: 0, 
-          isOrca 
+          isOrca,
+          diveTimer: 0 
         });
         currentX += minGap + Math.random() * (GRID_SIZE * 2.5);
       }
     }
 
-    if (Math.random() < 0.3) {
+    // 20% POWER-UP / ITEM SPAWN FREQUENCY
+    if (Math.random() < 0.2) {
       const ix = Math.floor(Math.random() * COLS) * GRID_SIZE;
       const allowedItems = ['FISH'];
       if (unlockShield) allowedItems.push('SHIELD');
@@ -644,7 +568,6 @@ function renderLeaderboard() {
 function renderShop() {
   const powerupList = document.getElementById('powerupList'); powerupList.innerHTML = '';
   
-  // Shield Unlock Card (30 Fish)
   const shieldCard = document.createElement('div');
   shieldCard.className = 'shop-card';
   shieldCard.innerHTML = `
@@ -659,7 +582,6 @@ function renderShop() {
   `;
   powerupList.appendChild(shieldCard);
 
-  // Sardine Unlock Card (60 Fish)
   const sardineCard = document.createElement('div');
   sardineCard.className = 'shop-card';
   sardineCard.innerHTML = `
@@ -674,7 +596,6 @@ function renderShop() {
   `;
   powerupList.appendChild(sardineCard);
 
-  // FIXED SKINS SHOP CARDS FORMATTING
   const list = document.getElementById('skinList'); list.innerHTML = '';
   SKINS.forEach(s => {
     const isUnlocked = unlockedSkins.includes(s.id);
@@ -794,7 +715,7 @@ function loop(time) {
             if (obs.x > canvas.width + 150) {
               let minX = Math.min(...row.obstacles.map(o => o.x));
               obs.x = Math.min(-obs.width - 50, minX - minGap);
-              obs.meltTimer = 0;
+              obs.meltTimer = 0; obs.diveTimer = 0;
             }
           });
         } else {
@@ -802,21 +723,37 @@ function loop(time) {
             if (obs.x + obs.width < -150) {
               let maxX = Math.max(...row.obstacles.map(o => o.x + o.width));
               obs.x = Math.max(canvas.width + 50, maxX + minGap);
-              obs.meltTimer = 0;
+              obs.meltTimer = 0; obs.diveTimer = 0;
             }
           });
         }
 
         row.obstacles.forEach(obs => {
+          const overlap = player.animX < obs.x + obs.width - 10 && player.animX + GRID_SIZE > obs.x + 10;
+
           if (r === player.row) {
-            const overlap = player.animX < obs.x + obs.width - 10 && player.animX + GRID_SIZE > obs.x + 10;
-            
             if (row.type === 'WATER' && overlap) {
               if (obs.isOrca) {
-                if (powerupTimer > 0) { obs.x = -2000; spawnParticles(player.animX, screenY, '#f8fafc', 15); }
-                else if (invulnerabilityTimer > 0) { /* grace */ }
-                else if (hasShield) triggerShieldBreak(obs, screenY);
-                else triggerOrcaEaten(screenY);
+                // RIDEABLE ORCA MECHANIC
+                onPlatform = true;
+                player.x += row.speed; player.animX += row.speed; player.col = Math.round(player.x / GRID_SIZE);
+
+                if (player.hopT === 1) {
+                  obs.diveTimer = (obs.diveTimer || 0) + dt;
+                  
+                  // 5-Second Timer Expiration check
+                  if (obs.diveTimer >= 5.0) {
+                    if (powerupTimer > 0) {
+                      // Invincibility protection
+                    } else if (hasShield) {
+                      triggerShieldBreak(obs, screenY);
+                      player.hop(0, 1);
+                      obs.diveTimer = 0;
+                    } else {
+                      triggerOrcaEaten(screenY);
+                    }
+                  }
+                }
               } else {
                 onPlatform = true;
                 player.x += row.speed; player.animX += row.speed; player.col = Math.round(player.x / GRID_SIZE);
@@ -829,6 +766,12 @@ function loop(time) {
               else { playSound('crash'); spawnParticles(player.animX, screenY, '#ef4444', 20); triggerGameOver(); }
             }
           }
+
+          // Reset Orca dive timer if player is not riding it
+          if (obs.isOrca && (!overlap || r !== player.row)) {
+            obs.diveTimer = 0;
+          }
+
           if (obs.isMelting && obs.meltTimer > 2.2) obs.x = -1000; 
         });
       }
@@ -886,14 +829,31 @@ function loop(time) {
       if (row.type === 'WATER') {
         if (obs.isOrca) {
           ctx.save();
+
+          // Submerge dipping effect when dive timer active
+          const dip = obs.diveTimer ? (obs.diveTimer / 5.0) * 8 : 0;
+
           if (row.speed < 0) {
-            ctx.translate(obs.x + obs.width, sy);
+            ctx.translate(obs.x + obs.width, sy + dip);
             ctx.scale(-1, 1);
             ctx.drawImage(orcaImg, 0, -6, obs.width, GRID_SIZE + 12);
           } else {
-            ctx.drawImage(orcaImg, obs.x, sy - 6, obs.width, GRID_SIZE + 12);
+            ctx.drawImage(orcaImg, obs.x, sy - 6 + dip, obs.width, GRID_SIZE + 12);
           }
           ctx.restore();
+
+          // 5-SECOND DIVE TIMER INDICATOR OVER ORCA
+          if (obs.diveTimer > 0) {
+            const timeLeft = Math.max(0, Math.ceil(5 - obs.diveTimer));
+            const timerX = obs.x + obs.width / 2;
+            const timerY = sy - 10;
+
+            ctx.fillStyle = obs.diveTimer > 3 ? '#ef4444' : '#f59e0b';
+            ctx.font = '900 16px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`⚠️ ${timeLeft}s`, timerX, timerY);
+          }
+
         } else {
           ctx.globalAlpha = obs.isMelting ? Math.max(0, 1 - (obs.meltTimer/2.2)) : 1;
           if (obs.isMelting && Math.random()<0.2) ctx.translate((Math.random()-0.5)*4, 0); 
@@ -942,7 +902,6 @@ function loop(time) {
 
     ctx.restore();
 
-    // Water Splash Ring
     ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.beginPath();
     ctx.ellipse(ox, oy + GRID_SIZE * 0.4, GRID_SIZE * (0.5 + p * 0.5), GRID_SIZE * 0.2, 0, 0, Math.PI * 2);
