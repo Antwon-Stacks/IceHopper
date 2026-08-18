@@ -162,7 +162,20 @@ let hasShield = false;
 
 // --- VISUAL ASSETS (SVG Data URIs) ---
 const svgToImg = (svg) => { const img = new Image(); img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg); return img; };
-const iceImg = svgToImg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100"><path d="M14,18 C32,8 168,8 186,18 C194,36 188,68 174,78 C144,88 56,88 26,78 C12,68 6,36 14,18 Z" fill="#e0f2fe"/><path d="M28,20 C50,14 100,16 125,22 C90,28 45,26 28,20 Z" fill="#ffffff" opacity="0.8"/></svg>`);
+
+// NEW ICE FLOE: Added glaring white streaks and sparkles to indicate it is "slippery"
+const iceImg = svgToImg(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
+  <path d="M14,18 C32,8 168,8 186,18 C194,36 188,68 174,78 C144,88 56,88 26,78 C12,68 6,36 14,18 Z" fill="#e0f2fe"/>
+  <path d="M22,25 C40,15 160,15 178,25 C186,40 180,65 166,75 C140,85 60,85 34,75 C20,65 14,40 22,25 Z" fill="#bae6fd"/>
+  <!-- Glossy Slippery Streaks -->
+  <path d="M 40,30 L 90,30 M 130,30 L 160,30 M 50,50 L 150,50 M 70,70 L 120,70" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+  <path d="M 60,40 L 80,40 M 110,60 L 140,60" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+  <!-- Shine Sparkles -->
+  <path d="M 140,25 L 140,15 M 135,20 L 145,20" stroke="#ffffff" stroke-width="2"/>
+  <path d="M 50,60 L 50,50 M 45,55 L 55,55" stroke="#ffffff" stroke-width="2"/>
+</svg>`);
+
 const shipImg = svgToImg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100"><path d="M8,48 L282,48 L295,68 C290,82 270,86 250,86 L40,86 C20,86 8,76 8,48 Z" fill="#7f1d1d"/><path d="M4,38 L286,38 L291,50 L8,50 Z" fill="#dc2626"/><rect x="22" y="16" width="46" height="22" fill="#0284c7"/><rect x="74" y="16" width="46" height="22" fill="#eab308"/><rect x="126" y="16" width="46" height="22" fill="#059669"/><rect x="212" y="8" width="36" height="30" rx="3" fill="#f8fafc"/><rect x="216" y="13" width="28" height="9" fill="#38bdf8"/></svg>`);
 
 // --- CLASSES ---
@@ -187,9 +200,9 @@ class Player {
     // SCORE KEEPER
     if (this.row > maxRow) {
       maxRow = this.row; 
-      score = (maxRow - 2) * 10; // Minus 2 because start is row 2
+      score = (maxRow - 2) * 10;
       checkAndUpdateHighScore(score);
-      updateHUD(); // Fix: Update the HUD display immediately
+      updateHUD(); 
     }
   }
   update(dt) {
@@ -203,7 +216,6 @@ class Player {
     }
   }
   
-  // NEW PENGUIN ART RENDERER
   draw(ctx, screenY) {
     if (this.isDead) return;
     const skin = SKINS.find(s => s.id === currentSkin);
@@ -281,7 +293,6 @@ class Player {
       ctx.beginPath(); ctx.moveTo(2, -4); ctx.lineTo(12, -4); ctx.lineTo(10, 0); ctx.lineTo(4, 0); ctx.fill();
       ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(-10, -9, 3, 3); ctx.fillRect(4, -9, 3, 3);
     }
-    
     ctx.restore();
   }
 }
@@ -499,9 +510,15 @@ function loop(time) {
     const row = getOrCreateRow(r);
     const sy = canvas.height - (r * GRID_SIZE - cameraY) - GRID_SIZE;
     
-    if (row.type === 'SAFE') { ctx.fillStyle = (r%2===0)?'#f1f5f9':'#e2e8f0'; ctx.fillRect(0, sy, canvas.width, GRID_SIZE+1); }
-    else if (row.type === 'WATER') { ctx.fillStyle = '#0284c7'; ctx.fillRect(0, sy, canvas.width, GRID_SIZE+1); }
-    else if (row.type === 'ROAD') { ctx.fillStyle = '#1e293b'; ctx.fillRect(0, sy, canvas.width, GRID_SIZE+1); }
+    // NEW: Both Water and Ship Lanes use the exact same continuous Water color
+    if (row.type === 'SAFE') { 
+        ctx.fillStyle = (r%2===0)?'#f1f5f9':'#e2e8f0'; 
+        ctx.fillRect(0, sy, canvas.width, GRID_SIZE+1); 
+    }
+    else if (row.type === 'WATER' || row.type === 'ROAD') { 
+        ctx.fillStyle = '#0284c7'; 
+        ctx.fillRect(0, sy, canvas.width, GRID_SIZE+1); 
+    }
 
     ctx.font = `${GRID_SIZE*0.6}px sans-serif`; ctx.textAlign = 'center';
     row.items.forEach(i => {
@@ -523,6 +540,24 @@ function loop(time) {
           ctx.setTransform(1,0,0,1,0,0); ctx.globalAlpha = 1;
         }
       } else if (row.type === 'ROAD') {
+        
+        // NEW: Draw Ship V-Wake foaming behind the ship
+        const wakeTime = performance.now() / 150;
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+        const wakeDir = row.speed > 0 ? -1 : 1;
+        const wakeStartX = row.speed > 0 ? obs.x + 5 : obs.x + obs.width - 5;
+        for(let i=0; i<6; i++) {
+            let phase = (wakeTime - i * 0.6) % 4;
+            if (phase < 0) phase += 4;
+            let wx = wakeStartX + wakeDir * (phase * 15);
+            let rSize = 2 + phase * 1.8;
+            let spread = phase * 4;
+            ctx.beginPath(); ctx.arc(wx, sy + GRID_SIZE/2 - spread, rSize, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(wx, sy + GRID_SIZE/2 + spread, rSize, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(wx, sy + GRID_SIZE/2, rSize * 1.4, 0, Math.PI*2); ctx.fill();
+        }
+
+        // Draw Ship
         ctx.save();
         if (row.speed < 0) { ctx.translate(obs.x + obs.width, sy); ctx.scale(-1, 1); ctx.drawImage(shipImg, 0, -4, obs.width, GRID_SIZE + 8); }
         else { ctx.drawImage(shipImg, obs.x, sy - 4, obs.width, GRID_SIZE + 8); }
