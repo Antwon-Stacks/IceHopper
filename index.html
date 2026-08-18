@@ -163,15 +163,13 @@ let hasShield = false;
 // --- VISUAL ASSETS (SVG Data URIs) ---
 const svgToImg = (svg) => { const img = new Image(); img.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(svg); return img; };
 
-// NEW ICE FLOE: Added glaring white streaks and sparkles to indicate it is "slippery"
+// Slippery Ice Floe Asset
 const iceImg = svgToImg(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100">
   <path d="M14,18 C32,8 168,8 186,18 C194,36 188,68 174,78 C144,88 56,88 26,78 C12,68 6,36 14,18 Z" fill="#e0f2fe"/>
   <path d="M22,25 C40,15 160,15 178,25 C186,40 180,65 166,75 C140,85 60,85 34,75 C20,65 14,40 22,25 Z" fill="#bae6fd"/>
-  <!-- Glossy Slippery Streaks -->
   <path d="M 40,30 L 90,30 M 130,30 L 160,30 M 50,50 L 150,50 M 70,70 L 120,70" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
   <path d="M 60,40 L 80,40 M 110,60 L 140,60" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
-  <!-- Shine Sparkles -->
   <path d="M 140,25 L 140,15 M 135,20 L 145,20" stroke="#ffffff" stroke-width="2"/>
   <path d="M 50,60 L 50,50 M 45,55 L 55,55" stroke="#ffffff" stroke-width="2"/>
 </svg>`);
@@ -182,7 +180,7 @@ const shipImg = svgToImg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3
 class Player {
   constructor() { this.reset(); }
   reset() {
-    this.col = 4; this.row = 2; // Player starts at row 2
+    this.col = 4; this.row = 2;
     this.x = this.col * GRID_SIZE; this.y = this.row * GRID_SIZE;
     this.animX = this.x; this.animY = this.y;
     this.hopT = 1; this.isDead = false;
@@ -197,7 +195,6 @@ class Player {
     playSound('hop');
     spawnParticles(this.animX + GRID_SIZE/2, canvas.height - (this.animY - cameraY), '#e2e8f0', 5);
     
-    // SCORE KEEPER
     if (this.row > maxRow) {
       maxRow = this.row; 
       score = (maxRow - 2) * 10;
@@ -207,7 +204,7 @@ class Player {
   }
   update(dt) {
     if (this.hopT < 1) {
-      this.hopT += dt * 6; // Animation speed
+      this.hopT += dt * 6;
       if (this.hopT > 1) this.hopT = 1;
       this.animX += (this.x - this.animX) * 0.4;
       this.animY += (this.y - this.animY) * 0.4;
@@ -222,7 +219,6 @@ class Player {
     const cx = this.animX + GRID_SIZE / 2;
     const cy = screenY + GRID_SIZE / 2;
     
-    // Powerup Aura
     if (powerupTimer > 0) {
       ctx.beginPath(); ctx.arc(cx, cy, GRID_SIZE*0.7, 0, Math.PI*2);
       ctx.fillStyle = `rgba(245, 158, 11, ${0.3 + Math.sin(Date.now()/50)*0.2})`; ctx.fill();
@@ -234,27 +230,22 @@ class Player {
     ctx.save();
     ctx.translate(cx, cy);
     
-    // Squash & Stretch
     if (this.hopT < 1) {
       const arc = Math.sin(this.hopT * Math.PI);
       ctx.translate(0, -arc * (GRID_SIZE * 0.4));
       ctx.scale(1 - arc * 0.15, 1 + arc * 0.2);
     }
 
-    // Shadow
     ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(0, 16, 14, 4, 0, 0, Math.PI*2); ctx.fill();
     
-    // 1. Side Flippers
     ctx.fillStyle = skin.color;
     ctx.beginPath(); ctx.ellipse(-14, 2, 4, 10, 0.5, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(14, 2, 4, 10, -0.5, 0, Math.PI*2); ctx.fill();
 
-    // 2. Orange Feet
     ctx.fillStyle = skin.beak;
     ctx.beginPath(); ctx.ellipse(-8, 14, 5, 3, -0.2, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(8, 14, 5, 3, 0.2, 0, Math.PI*2); ctx.fill();
 
-    // 3. Pear-Shaped Body
     ctx.fillStyle = skin.color;
     ctx.beginPath();
     ctx.moveTo(0, -16);
@@ -263,12 +254,10 @@ class Player {
     ctx.bezierCurveTo(18, -2, 14, -16, 0, -16);
     ctx.fill();
 
-    // 4. White Face Mask & Belly
     ctx.fillStyle = '#ffffff';
     ctx.beginPath(); ctx.arc(-5, -6, 6, 0, Math.PI*2); ctx.arc(5, -6, 6, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(0, 6, 11, 8, 0, 0, Math.PI*2); ctx.fill();
 
-    // 5. Beak
     ctx.beginPath();
     if (skin.id === 'puffin') {
         ctx.fillStyle = '#ef4444'; ctx.moveTo(-6, -2); ctx.lineTo(6, -2); ctx.lineTo(0, 6); ctx.fill();
@@ -277,7 +266,6 @@ class Player {
         ctx.fillStyle = skin.beak; ctx.moveTo(-5, -2); ctx.lineTo(5, -2); ctx.lineTo(0, 4); ctx.fill();
     }
 
-    // 6. Eyes & Shine
     ctx.fillStyle = '#0f172a';
     ctx.beginPath(); ctx.arc(-5, -6, 2, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(5, -6, 2, 0, Math.PI*2); ctx.fill();
@@ -285,7 +273,6 @@ class Player {
     ctx.beginPath(); ctx.arc(-6, -7, 0.8, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(4, -7, 0.8, 0, Math.PI*2); ctx.fill();
 
-    // 7. Cool Guy Glasses
     if (skin.glasses) {
       ctx.fillStyle = '#111';
       ctx.fillRect(-12, -10, 24, 6); ctx.fillRect(-1, -10, 2, 6);
@@ -300,7 +287,6 @@ class Player {
 const player = new Player();
 const generatedRows = new Map();
 
-// --- MAP GENERATION (Progressive Difficulty) ---
 function getOrCreateRow(r) {
   if (generatedRows.has(r)) return generatedRows.get(r);
 
@@ -313,7 +299,6 @@ function getOrCreateRow(r) {
     else if (r < 30) type = rand < 0.4 ? 'ROAD' : (rand < 0.8 ? 'WATER' : 'SAFE'); 
     else type = rand < 0.4 ? 'ROAD' : (rand < 0.85 ? 'WATER' : 'SAFE'); 
 
-    // Spawn Obstacles
     if (type !== 'SAFE') {
       const dir = Math.random() < 0.5 ? 1 : -1;
       speed = dir * (1.5 + Math.random() * 2) * (1 + diff);
@@ -326,7 +311,6 @@ function getOrCreateRow(r) {
       }
     }
 
-    // Spawn Items
     if (Math.random() < 0.15) {
       const ix = Math.floor(Math.random() * COLS) * GRID_SIZE;
       const itemType = Math.random() < 0.05 ? 'SARDINE' : (Math.random() < 0.1 ? 'SHIELD' : 'FISH');
@@ -339,7 +323,6 @@ function getOrCreateRow(r) {
   return rowData;
 }
 
-// --- PARTICLES ---
 function spawnParticles(x, y, color, count) {
   for(let i=0; i<count; i++) {
     particles.push({
@@ -349,7 +332,6 @@ function spawnParticles(x, y, color, count) {
   }
 }
 
-// --- INPUTS ---
 let touchStartX = 0, touchStartY = 0;
 window.addEventListener('touchstart', e => { initAudio(); touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; }, {passive: false});
 window.addEventListener('touchend', e => {
@@ -364,7 +346,6 @@ window.addEventListener('keydown', e => {
   if(e.key==='ArrowLeft'||e.key==='a') player.hop(-1,0); if(e.key==='ArrowRight'||e.key==='d') player.hop(1,0);
 });
 
-// --- MENU LOGIC ---
 function startGame() {
   document.getElementById('startMenu').classList.add('hidden');
   document.getElementById('gameHud').style.opacity = 1;
@@ -415,7 +396,6 @@ function updateHUD() {
   document.getElementById('statusDisplay').innerText = hasShield ? '🛡️' : '';
 }
 
-// --- MAIN LOOP ---
 let lastTime = performance.now();
 function loop(time) {
   const dt = (time - lastTime) / 1000; lastTime = time;
@@ -423,7 +403,6 @@ function loop(time) {
   if (gameState === 'PLAY') {
     player.update(dt);
     
-    // Auto Scroll
     autoScrollSpeed = 0.25 + Math.min(score / 2000, 0.6);
     cameraY += autoScrollSpeed;
     const targetCam = player.animY - canvas.height * 0.4;
@@ -432,7 +411,6 @@ function loop(time) {
     const screenY = canvas.height - (player.animY - cameraY) - GRID_SIZE;
     if (screenY > canvas.height + 20) { playSound('splash'); spawnParticles(player.animX, canvas.height, '#38bdf8', 20); triggerGameOver(); }
 
-    // Powerups
     if (powerupTimer > 0) {
       powerupTimer -= dt;
       document.getElementById('powerupBar').style.display = 'block';
@@ -444,11 +422,9 @@ function loop(time) {
     let onPlatform = false;
     const curRow = getOrCreateRow(player.row);
 
-    // Obstacle Logic
     for (let r = Math.floor(cameraY / GRID_SIZE) - 2; r <= Math.ceil(canvas.height / GRID_SIZE) + Math.floor(cameraY / GRID_SIZE) + 2; r++) {
       const row = getOrCreateRow(r);
       
-      // Update Items
       row.items.forEach(item => {
         if (!item.collected && r === player.row && Math.abs(player.animX - item.x) < GRID_SIZE/2) {
           item.collected = true;
@@ -459,19 +435,17 @@ function loop(time) {
         }
       });
 
-      // Update Obstacles
       if (row.speed !== 0) {
         row.obstacles.forEach(obs => {
           obs.x += row.speed;
           if (row.speed > 0 && obs.x > canvas.width + 200) obs.x = -obs.width - 100;
           else if (row.speed < 0 && obs.x + obs.width < -200) obs.x = canvas.width + 100;
 
-          // Collision
           if (r === player.row) {
             const overlap = player.animX < obs.x + obs.width - 10 && player.animX + GRID_SIZE > obs.x + 10;
             if (row.type === 'WATER' && overlap) {
               if (obs.isOrca) {
-                if (powerupTimer > 0) { /* invincible */ } 
+                if (powerupTimer > 0) {} 
                 else if (hasShield) { hasShield = false; player.hop(0, -1); playSound('crash'); updateHUD(); }
                 else { playSound('splash'); spawnParticles(player.animX, screenY, '#ef4444', 20); triggerGameOver(); }
               } else {
@@ -494,7 +468,6 @@ function loop(time) {
     if (player.animX < -GRID_SIZE/2 || player.animX > canvas.width - GRID_SIZE/2) { playSound('splash'); triggerGameOver(); }
   }
 
-  // --- RENDER ---
   const cycle = (maxRow / 100) % 1;
   let bgGrad = ctx.createLinearGradient(0,0,0,canvas.height);
   if (cycle < 0.3) { bgGrad.addColorStop(0, '#38bdf8'); bgGrad.addColorStop(1, '#e0f2fe'); }
@@ -510,7 +483,6 @@ function loop(time) {
     const row = getOrCreateRow(r);
     const sy = canvas.height - (r * GRID_SIZE - cameraY) - GRID_SIZE;
     
-    // NEW: Both Water and Ship Lanes use the exact same continuous Water color
     if (row.type === 'SAFE') { 
         ctx.fillStyle = (r%2===0)?'#f1f5f9':'#e2e8f0'; 
         ctx.fillRect(0, sy, canvas.width, GRID_SIZE+1); 
@@ -541,21 +513,22 @@ function loop(time) {
         }
       } else if (row.type === 'ROAD') {
         
-        // NEW: Draw Ship V-Wake foaming behind the ship
-        const wakeTime = performance.now() / 150;
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-        const wakeDir = row.speed > 0 ? -1 : 1;
-        const wakeStartX = row.speed > 0 ? obs.x + 5 : obs.x + obs.width - 5;
-        for(let i=0; i<6; i++) {
-            let phase = (wakeTime - i * 0.6) % 4;
-            if (phase < 0) phase += 4;
-            let wx = wakeStartX + wakeDir * (phase * 15);
-            let rSize = 2 + phase * 1.8;
-            let spread = phase * 4;
-            ctx.beginPath(); ctx.arc(wx, sy + GRID_SIZE/2 - spread, rSize, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(wx, sy + GRID_SIZE/2 + spread, rSize, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(wx, sy + GRID_SIZE/2, rSize * 1.4, 0, Math.PI*2); ctx.fill();
+        // SIMPLE CLEAN WAKE: Trailing wedge directly behind stern
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+        ctx.beginPath();
+        if (row.speed > 0) {
+          ctx.moveTo(obs.x, sy + GRID_SIZE * 0.35);
+          ctx.lineTo(obs.x - 22, sy + GRID_SIZE * 0.2);
+          ctx.lineTo(obs.x - 22, sy + GRID_SIZE * 0.8);
+          ctx.lineTo(obs.x, sy + GRID_SIZE * 0.65);
+        } else {
+          ctx.moveTo(obs.x + obs.width, sy + GRID_SIZE * 0.35);
+          ctx.lineTo(obs.x + obs.width + 22, sy + GRID_SIZE * 0.2);
+          ctx.lineTo(obs.x + obs.width + 22, sy + GRID_SIZE * 0.8);
+          ctx.lineTo(obs.x + obs.width, sy + GRID_SIZE * 0.65);
         }
+        ctx.closePath();
+        ctx.fill();
 
         // Draw Ship
         ctx.save();
