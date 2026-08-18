@@ -33,7 +33,7 @@
     #shop, #leaderboard { display: none; flex-direction: column; align-items: center; justify-content: center; background: #0f172a; overflow-y: auto; padding: 20px; }
     .shop-section { width: 310px; margin-bottom: 15px; }
     .shop-section-title { color: #94a3b8; font-size: 13px; font-weight: 800; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px; }
-    .shop-card { background: #1e293b; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; border: 2px solid transparent; }
+    .shop-card { background: #1e293b; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; border: 2px solid transparent; width: 100%; }
     .shop-card.active { border-color: #38bdf8; }
     .shop-info { color: white; font-weight: bold; font-size: 15px; }
     .shop-sub { color: #94a3b8; font-size: 11px; font-weight: normal; margin-top: 2px; }
@@ -168,10 +168,11 @@ function checkAndUpdateHighScore(currentScore) {
   }
 }
 
+// SKINS CONFIGURATION
 const SKINS = [
-  { id: 'default', name: 'Classic', cost: 0, color: '#0f172a', beak: '#f97316' },
-  { id: 'puffin', name: 'Puffin', cost: 50, color: '#1e293b', beak: '#ef4444' },
-  { id: 'cool', name: 'Cool Guy', cost: 150, color: '#0f172a', beak: '#f97316', glasses: true }
+  { id: 'default', name: 'Classic', cost: 0 },
+  { id: 'puffin', name: 'Atlantic Puffin', cost: 50 },
+  { id: 'seal', name: 'Harbor Seal', cost: 120 }
 ];
 
 // --- AUDIO & HAPTICS ---
@@ -246,7 +247,7 @@ const iceImg = svgToImg(`
 
 const shipImg = svgToImg(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 100"><path d="M8,48 L282,48 L295,68 C290,82 270,86 250,86 L40,86 C20,86 8,76 8,48 Z" fill="#7f1d1d"/><path d="M4,38 L286,38 L291,50 L8,50 Z" fill="#dc2626"/><rect x="22" y="16" width="46" height="22" fill="#0284c7"/><rect x="74" y="16" width="46" height="22" fill="#eab308"/><rect x="126" y="16" width="46" height="22" fill="#059669"/><rect x="212" y="8" width="36" height="30" rx="3" fill="#f8fafc"/><rect x="216" y="13" width="28" height="9" fill="#38bdf8"/></svg>`);
 
-// HIGH-DETAIL SWIMMING ORCA (LANE OBSTACLE)
+// BULKY STOCKY SWIMMING ORCA (LANE OBSTACLE)
 const orcaImg = svgToImg(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 100">
   <defs>
@@ -260,41 +261,38 @@ const orcaImg = svgToImg(`
       <stop offset="100%" stop-color="#e0f2fe" stop-opacity="0"/>
     </linearGradient>
   </defs>
-  <!-- Water Wake & Waves -->
   <ellipse cx="120" cy="58" rx="100" ry="24" fill="#0284c7" opacity="0.4"/>
   <ellipse cx="120" cy="58" rx="80" ry="16" fill="#38bdf8" opacity="0.3"/>
-  <path d="M 20,58 Q 50,48 100,58 Q 150,68 220,58" stroke="#ffffff" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.5"/>
+  <path d="M 20,58 Q 50,48 100,58 Q 150,68 220,58" stroke="#ffffff" stroke-width="3" fill="none" opacity="0.5"/>
   
-  <!-- Sleek Black Body -->
-  <path d="M 15,58 C 25,28 75,22 135,32 C 180,40 210,48 225,58 C 210,68 175,78 125,78 C 65,78 28,72 15,58 Z" fill="url(#bodyGrad)"/>
+  <!-- Thick, Heavy Body (Blunt Rounded Head) -->
+  <path d="M 10,52 C 15,20 70,14 140,26 C 185,35 215,48 230,52 C 215,64 175,84 120,84 C 60,84 20,76 10,52 Z" fill="url(#bodyGrad)"/>
   
-  <!-- White Belly & Jaw -->
-  <path d="M 22,60 C 40,68 70,76 115,76 C 160,76 195,68 210,58 C 185,67 145,71 105,71 C 65,71 35,66 22,60 Z" fill="#ffffff"/>
+  <!-- Massive White Underbelly -->
+  <path d="M 18,54 C 35,66 70,80 120,80 C 165,80 200,68 215,56 C 190,70 145,75 105,75 C 60,75 30,68 18,54 Z" fill="#ffffff"/>
   
-  <!-- Iconic Grey Saddle Patch -->
-  <path d="M 125,35 C 135,36 148,40 152,48 C 145,52 132,50 120,44 C 118,39 121,36 125,35 Z" fill="#94a3b8" opacity="0.85"/>
+  <!-- Grey Saddle Patch -->
+  <path d="M 130,30 C 142,32 158,38 162,48 C 152,52 138,48 124,42 C 122,36 125,32 130,30 Z" fill="#94a3b8" opacity="0.85"/>
   
-  <!-- Detailed White Eye Patch -->
-  <ellipse cx="58" cy="46" rx="15" ry="7" transform="rotate(-12 58 46)" fill="#ffffff"/>
-  <circle cx="45" cy="49" r="2.5" fill="#000000"/>
+  <!-- White Eye Oval -->
+  <ellipse cx="50" cy="42" rx="18" ry="9" transform="rotate(-10 50 42)" fill="#ffffff"/>
+  <circle cx="36" cy="46" r="2.5" fill="#000000"/>
   
-  <!-- Curved Tall Dorsal Fin with Shading -->
-  <path d="M 102,38 C 112,8 118,2 126,4 C 123,20 128,31 140,36 Z" fill="#0f172a"/>
-  <path d="M 102,38 C 112,8 118,2 122,4 C 118,15 120,28 128,36 Z" fill="#334155" opacity="0.5"/>
+  <!-- Thick Dorsal Fin -->
+  <path d="M 105,34 C 115,2 122,-4 132,0 C 128,18 132,30 148,34 Z" fill="#0f172a"/>
   
-  <!-- Pectoral Fin -->
-  <path d="M 75,64 C 62,82 50,86 45,83 C 52,74 64,66 75,64 Z" fill="#0f172a"/>
+  <!-- Paddle Flipper -->
+  <path d="M 75,66 C 60,88 45,92 40,88 C 48,78 62,68 75,66 Z" fill="#0f172a"/>
   
   <!-- Blowhole Mist Spray -->
-  <path d="M 78,28 L 68,5 L 90,5 Z" fill="url(#mistGrad)"/>
-  <circle cx="75" cy="18" r="4" fill="#ffffff" opacity="0.6"/>
-  <circle cx="82" cy="12" r="3" fill="#ffffff" opacity="0.5"/>
-  <circle cx="70" cy="10" r="2.5" fill="#ffffff" opacity="0.4"/>
+  <path d="M 80,24 L 70,2 L 92,2 Z" fill="url(#mistGrad)"/>
+  <circle cx="78" cy="14" r="5" fill="#ffffff" opacity="0.6"/>
+  <circle cx="86" cy="8" r="3.5" fill="#ffffff" opacity="0.5"/>
 </svg>`);
 
-// HIGH-DETAIL BREACHING ORCA (DEATH ANIMATION)
+// HEAVY BREACHING APEX ORCA (DEATH ANIMATION)
 const orcaBreachImg = svgToImg(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 180">
   <defs>
     <linearGradient id="bBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#334155"/>
@@ -303,37 +301,35 @@ const orcaBreachImg = svgToImg(`
     </linearGradient>
   </defs>
   
-  <!-- Tail Flukes -->
-  <path d="M 160,115 C 180,125 195,135 192,142 C 178,140 165,128 152,120 Z" fill="#0f172a"/>
-  <path d="M 160,115 C 175,100 190,92 195,98 C 185,108 172,114 152,120 Z" fill="#0f172a"/>
+  <!-- Massive Tail Flukes -->
+  <path d="M 175,130 C 198,142 215,152 212,160 C 195,158 180,144 165,135 Z" fill="#0f172a"/>
+  <path d="M 175,130 C 192,112 208,102 215,108 C 202,120 188,126 165,135 Z" fill="#0f172a"/>
 
-  <!-- Main Arched Body -->
-  <path d="M 35,70 C 45,35 90,20 140,55 C 160,70 170,95 160,118 C 145,95 120,68 80,68 C 50,68 35,70 35,70 Z" fill="url(#bBodyGrad)"/>
+  <!-- Thick Heavy Arched Torso -->
+  <path d="M 25,80 C 35,35 90,15 150,55 C 175,72 185,105 175,132 C 155,105 125,72 80,72 C 45,72 25,80 25,80 Z" fill="url(#bBodyGrad)"/>
 
-  <!-- White Belly & Jaw Underbelly -->
-  <path d="M 38,78 C 50,88 85,95 125,90 C 150,85 160,115 160,118 C 140,88 105,82 70,82 C 50,82 38,78 38,78 Z" fill="#ffffff"/>
+  <!-- White Underbelly Patch -->
+  <path d="M 28,90 C 45,102 85,110 135,102 C 162,96 175,130 175,132 C 150,98 110,90 70,90 C 45,90 28,90 28,90 Z" fill="#ffffff"/>
 
-  <!-- Grey Saddle Patch -->
-  <path d="M 110,42 C 122,46 132,58 128,68 C 118,66 110,58 105,50 Z" fill="#94a3b8" opacity="0.85"/>
+  <!-- Saddle Patch -->
+  <path d="M 120,46 C 134,50 146,64 142,75 C 130,72 120,62 114,54 Z" fill="#94a3b8" opacity="0.85"/>
 
-  <!-- Dorsal Fin -->
-  <path d="M 95,30 C 105,2 112,-8 118,-5 C 118,12 120,28 132,38 Z" fill="#0f172a"/>
+  <!-- Broad Dorsal Fin -->
+  <path d="M 105,32 C 115,0 125,-12 132,-8 C 130,12 132,30 145,42 Z" fill="#0f172a"/>
 
-  <!-- Pectoral Fin -->
-  <path d="M 85,72 C 80,95 72,110 65,106 C 68,92 76,80 85,72 Z" fill="#0f172a"/>
+  <!-- Large Paddle Pectoral Fin -->
+  <path d="M 90,80 C 82,108 72,125 64,120 C 68,102 78,88 90,80 Z" fill="#0f172a"/>
 
-  <!-- White Eye Oval -->
-  <ellipse cx="48" cy="52" rx="12" ry="6" transform="rotate(-25 48 52)" fill="#ffffff"/>
+  <!-- Distinct White Eye Patch -->
+  <ellipse cx="42" cy="58" rx="14" ry="7" transform="rotate(-20 42 58)" fill="#ffffff"/>
 
-  <!-- Open Jaws & Interior Mouth -->
-  <path d="M 12,72 C 22,60 40,64 45,70 L 25,76 Z" fill="#0f172a"/>
-  <path d="M 18,85 C 28,90 42,82 45,78 L 25,76 Z" fill="#ffffff"/>
-  <path d="M 18,74 C 28,70 38,74 42,76 C 38,80 28,82 18,74 Z" fill="#991b1b"/>
-  <path d="M 22,77 C 28,75 34,77 36,79 C 32,81 26,81 22,77 Z" fill="#f43f5e"/>
+  <!-- Massive Open Jaw Cavity & Teeth -->
+  <path d="M 5,82 C 18,68 38,72 45,78 L 22,88 Z" fill="#0f172a"/>
+  <path d="M 12,98 C 24,104 40,94 45,88 L 22,88 Z" fill="#ffffff"/>
+  <path d="M 14,84 C 24,78 36,82 42,85 C 38,90 26,92 14,84 Z" fill="#991b1b"/>
   
-  <!-- Sharp Teeth Rows -->
-  <path d="M 16,73 L 18,76 L 20,73 L 22,76 L 24,73 L 26,76 L 28,73 L 30,76 L 32,73 L 34,76 L 36,73 L 38,76" stroke="#ffffff" stroke-width="1.5" fill="none"/>
-  <path d="M 20,81 L 22,78 L 24,81 L 26,78 L 28,81 L 30,78 L 32,81 L 34,78 L 36,81" stroke="#ffffff" stroke-width="1.5" fill="none"/>
+  <path d="M 10,83 L 13,86 L 16,83 L 19,86 L 22,83 L 25,86 L 28,83 L 31,86 L 34,83 L 37,86" stroke="#ffffff" stroke-width="2" fill="none"/>
+  <path d="M 14,92 L 17,89 L 20,92 L 23,89 L 26,92 L 29,89 L 32,92 L 35,89" stroke="#ffffff" stroke-width="2" fill="none"/>
 </svg>`);
 
 // --- CLASSES ---
@@ -399,49 +395,124 @@ class Player {
       ctx.scale(1 - arc * 0.15, 1 + arc * 0.2);
     }
 
-    ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(0, 16, 14, 4, 0, 0, Math.PI*2); ctx.fill();
-    
-    ctx.fillStyle = skin.color;
-    ctx.beginPath(); ctx.ellipse(-14, 2, 4, 10, 0.5, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(14, 2, 4, 10, -0.5, 0, Math.PI*2); ctx.fill();
+    // --- CHARACTER SKINS DRAWING ---
+    if (skin.id === 'seal') {
+      // --- HARBOR SEAL ---
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(0, 16, 16, 5, 0, 0, Math.PI*2); ctx.fill();
+      
+      // Side Flippers
+      ctx.fillStyle = '#475569';
+      ctx.beginPath(); ctx.ellipse(-15, 6, 6, 12, 0.6, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(15, 6, 6, 12, -0.6, 0, Math.PI*2); ctx.fill();
 
-    ctx.fillStyle = skin.beak;
-    ctx.beginPath(); ctx.ellipse(-8, 14, 5, 3, -0.2, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(8, 14, 5, 3, 0.2, 0, Math.PI*2); ctx.fill();
+      // Main Grey Body
+      ctx.fillStyle = '#64748b';
+      ctx.beginPath(); ctx.ellipse(0, 2, 16, 18, 0, 0, Math.PI*2); ctx.fill();
 
-    ctx.fillStyle = skin.color;
-    ctx.beginPath();
-    ctx.moveTo(0, -16);
-    ctx.bezierCurveTo(-14, -16, -18, -2, -15, 10);
-    ctx.bezierCurveTo(-8, 18, 8, 18, 15, 10);
-    ctx.bezierCurveTo(18, -2, 14, -16, 0, -16);
-    ctx.fill();
+      // Lighter Belly
+      ctx.fillStyle = '#cbd5e1';
+      ctx.beginPath(); ctx.ellipse(0, 5, 11, 12, 0, 0, Math.PI*2); ctx.fill();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(-5, -6, 6, 0, Math.PI*2); ctx.arc(5, -6, 6, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(0, 6, 11, 8, 0, 0, Math.PI*2); ctx.fill();
+      // Seal Coat Spots
+      ctx.fillStyle = '#334155';
+      ctx.beginPath(); ctx.arc(-6, 2, 1.5, 0, Math.PI*2); ctx.arc(7, 8, 2, 0, Math.PI*2); ctx.arc(-8, 10, 1.5, 0, Math.PI*2); ctx.fill();
 
-    ctx.beginPath();
-    if (skin.id === 'puffin') {
-        ctx.fillStyle = '#ef4444'; ctx.moveTo(-6, -2); ctx.lineTo(6, -2); ctx.lineTo(0, 6); ctx.fill();
-        ctx.fillStyle = '#f59e0b'; ctx.beginPath(); ctx.moveTo(-6, -2); ctx.lineTo(6, -2); ctx.lineTo(0, 0); ctx.fill();
+      // Muzzle / Whisker Pads
+      ctx.fillStyle = '#f1f5f9';
+      ctx.beginPath(); ctx.ellipse(-4, -2, 5, 4, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(4, -2, 5, 4, 0, 0, Math.PI*2); ctx.fill();
+
+      // Nose
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.ellipse(0, -4, 4, 2.5, 0, 0, Math.PI*2); ctx.fill();
+
+      // Big Cute Seal Eyes
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(-6, -8, 3.5, 0, Math.PI*2); ctx.arc(6, -8, 3.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(-7, -9, 1.2, 0, Math.PI*2); ctx.arc(5, -9, 1.2, 0, Math.PI*2); ctx.fill();
+
+      // Whiskers
+      ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(-5, -2); ctx.lineTo(-14, -4);
+      ctx.moveTo(-5, 0); ctx.lineTo(-13, 2);
+      ctx.moveTo(5, -2); ctx.lineTo(14, -4);
+      ctx.moveTo(5, 0); ctx.lineTo(13, 2);
+      ctx.stroke();
+
+    } else if (skin.id === 'puffin') {
+      // --- ATLANTIC PUFFIN ---
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(0, 16, 14, 4, 0, 0, Math.PI*2); ctx.fill();
+
+      // Orange Webbed Feet
+      ctx.fillStyle = '#f97316';
+      ctx.beginPath(); ctx.ellipse(-8, 15, 6, 3, -0.3, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(8, 15, 6, 3, 0.3, 0, Math.PI*2); ctx.fill();
+
+      // Wings & Body
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.ellipse(-14, 2, 4, 10, 0.5, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(14, 2, 4, 10, -0.5, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(0, -16);
+      ctx.bezierCurveTo(-14, -16, -18, -2, -15, 10);
+      ctx.bezierCurveTo(-8, 18, 8, 18, 15, 10);
+      ctx.bezierCurveTo(18, -2, 14, -16, 0, -16);
+      ctx.fill();
+
+      // Distinct White Face Mask
+      ctx.fillStyle = '#f8fafc';
+      ctx.beginPath(); ctx.ellipse(-6, -5, 7, 7, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(6, -5, 7, 7, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0, 6, 10, 8, 0, 0, Math.PI*2); ctx.fill();
+
+      // Red Eye Ring & Dark Eye
+      ctx.fillStyle = '#ef4444';
+      ctx.beginPath(); ctx.arc(-5, -6, 3.5, 0, Math.PI*2); ctx.arc(5, -6, 3.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(-5, -6, 2, 0, Math.PI*2); ctx.arc(5, -6, 2, 0, Math.PI*2); ctx.fill();
+
+      // LARGE STRIPED PUFFIN BEAK
+      ctx.fillStyle = '#f59e0b'; // Yellow base
+      ctx.beginPath(); ctx.moveTo(-7, -2); ctx.lineTo(7, -2); ctx.lineTo(0, 10); ctx.fill();
+      ctx.fillStyle = '#ef4444'; // Red tip
+      ctx.beginPath(); ctx.moveTo(-5, 2); ctx.lineTo(5, 2); ctx.lineTo(0, 10); ctx.fill();
+      ctx.fillStyle = '#0284c7'; // Blue stripe accent
+      ctx.fillRect(-5, -2, 10, 2);
+
     } else {
-        ctx.fillStyle = skin.beak; ctx.moveTo(-5, -2); ctx.lineTo(5, -2); ctx.lineTo(0, 4); ctx.fill();
-    }
+      // --- CLASSIC PENGUIN ---
+      ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.beginPath(); ctx.ellipse(0, 16, 14, 4, 0, 0, Math.PI*2); ctx.fill();
+      
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.ellipse(-14, 2, 4, 10, 0.5, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(14, 2, 4, 10, -0.5, 0, Math.PI*2); ctx.fill();
 
-    ctx.fillStyle = '#0f172a';
-    ctx.beginPath(); ctx.arc(-5, -6, 2, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(5, -6, 2, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(-6, -7, 0.8, 0, Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.arc(4, -7, 0.8, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#f97316';
+      ctx.beginPath(); ctx.ellipse(-8, 14, 5, 3, -0.2, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(8, 14, 5, 3, 0.2, 0, Math.PI*2); ctx.fill();
 
-    if (skin.glasses) {
-      ctx.fillStyle = '#111';
-      ctx.fillRect(-12, -10, 24, 6); ctx.fillRect(-1, -10, 2, 6);
-      ctx.beginPath(); ctx.moveTo(-12, -4); ctx.lineTo(-2, -4); ctx.lineTo(-4, 0); ctx.lineTo(-10, 0); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(2, -4); ctx.lineTo(12, -4); ctx.lineTo(10, 0); ctx.lineTo(4, 0); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.fillRect(-10, -9, 3, 3); ctx.fillRect(4, -9, 3, 3);
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.moveTo(0, -16);
+      ctx.bezierCurveTo(-14, -16, -18, -2, -15, 10);
+      ctx.bezierCurveTo(-8, 18, 8, 18, 15, 10);
+      ctx.bezierCurveTo(18, -2, 14, -16, 0, -16);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(-5, -6, 6, 0, Math.PI*2); ctx.arc(5, -6, 6, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(0, 6, 11, 8, 0, 0, Math.PI*2); ctx.fill();
+
+      ctx.fillStyle = '#f97316'; ctx.beginPath(); ctx.moveTo(-5, -2); ctx.lineTo(5, -2); ctx.lineTo(0, 4); ctx.fill();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(-5, -6, 2, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(5, -6, 2, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(-6, -7, 0.8, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(4, -7, 0.8, 0, Math.PI*2); ctx.fill();
     }
     ctx.restore();
   }
@@ -603,15 +674,18 @@ function renderShop() {
   `;
   powerupList.appendChild(sardineCard);
 
-  // Skins Shop
+  // FIXED SKINS SHOP CARDS FORMATTING
   const list = document.getElementById('skinList'); list.innerHTML = '';
   SKINS.forEach(s => {
     const isUnlocked = unlockedSkins.includes(s.id);
     const isEquipped = currentSkin === s.id;
     const div = document.createElement('div');
-    div.className = `skin-card ${isEquipped ? 'active' : ''}`;
+    div.className = `shop-card ${isEquipped ? 'active' : ''}`;
     div.innerHTML = `
-      <div><div class="skin-info">${s.name}</div>${!isUnlocked ? `<div class="skin-cost">🐟 ${s.cost}</div>` : ''}</div>
+      <div>
+        <div class="shop-info">${s.name}</div>
+        ${!isUnlocked ? `<div class="shop-cost">🐟 ${s.cost}</div>` : '<div class="shop-sub">Unlocked</div>'}
+      </div>
       <button class="shop-btn ${isEquipped ? 'alt' : ''}" onclick="buySkin('${s.id}')">${isEquipped ? 'Equipped' : (isUnlocked ? 'Equip' : 'Buy')}</button>
     `;
     list.appendChild(div);
@@ -733,7 +807,6 @@ function loop(time) {
           });
         }
 
-        // Collision Logic
         row.obstacles.forEach(obs => {
           if (r === player.row) {
             const overlap = player.animX < obs.x + obs.width - 10 && player.animX + GRID_SIZE > obs.x + 10;
@@ -849,28 +922,27 @@ function loop(time) {
 
   player.draw(ctx, canvas.height - (player.animY - cameraY) - GRID_SIZE);
 
-  // HIGH-DETAIL BREACHING ORCA DEATH ANIMATION
+  // HEAVY BREACHING ORCA DEATH ANIMATION
   if (orcaBiteAnimation) {
     orcaBiteAnimation.progress += dt * 2.2;
     const ox = orcaBiteAnimation.x + GRID_SIZE / 2;
     const oy = orcaBiteAnimation.y + GRID_SIZE / 2;
     const p = Math.min(1, orcaBiteAnimation.progress);
 
-    // Arching trajectory calculation
     const archY = Math.sin(p * Math.PI) * (GRID_SIZE * 1.5);
-    const archAngle = (-Math.PI / 4) + (p * (Math.PI * 0.65)); // Rotate along trajectory
+    const archAngle = (-Math.PI / 4) + (p * (Math.PI * 0.65));
 
     ctx.save();
     ctx.translate(ox, oy + GRID_SIZE * 0.2 - archY);
     ctx.rotate(archAngle);
 
-    const breachWidth = GRID_SIZE * 2.2;
-    const breachHeight = GRID_SIZE * 1.7;
+    const breachWidth = GRID_SIZE * 2.3;
+    const breachHeight = GRID_SIZE * 1.8;
     ctx.drawImage(orcaBreachImg, -breachWidth * 0.3, -breachHeight * 0.5, breachWidth, breachHeight);
 
     ctx.restore();
 
-    // Water Splash Foam & Droplets at Base
+    // Water Splash Ring
     ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
     ctx.beginPath();
     ctx.ellipse(ox, oy + GRID_SIZE * 0.4, GRID_SIZE * (0.5 + p * 0.5), GRID_SIZE * 0.2, 0, 0, Math.PI * 2);
